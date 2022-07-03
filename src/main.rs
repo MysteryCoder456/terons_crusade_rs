@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 fn main() {
     App::new()
+        .insert_resource(ClearColor(Color::hex("87CEEB").unwrap()))
         .insert_resource(WindowDescriptor {
             title: "Teron's Crusade".to_owned(),
             width: 1080.,
