@@ -1,12 +1,14 @@
 use bevy::{core::FixedTimestep, prelude::*};
 
-use crate::{components::Player, SPRITE_SCALE, TIME_STEP};
+use crate::{
+    components::{AnimationState, Player},
+    SPRITE_SCALE, TIME_STEP,
+};
 
 const IDLE_SHEET: &str = "player/idle.png";
 const RUN_SHEET: &str = "player/run.png";
 const FALL_SHEET: &str = "player/fall.png";
 const JUMP_SHEET: &str = "player/jump.png";
-const LANDING_SHEET: &str = "player/landing.png";
 
 pub struct PlayerPlugin;
 
@@ -15,11 +17,11 @@ impl Plugin for PlayerPlugin {
         app.add_startup_system(player_setup_system)
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_player_system)
             .add_system_set(
-                // All physics/animation related stuff here
-                SystemSet::new()
-                    .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
-                    .with_system(player_animation_system),
-            );
+                // All physicsrelated stuff here
+                SystemSet::new().with_run_criteria(FixedTimestep::step(TIME_STEP as f64)), // .with_system(player_movement_system)
+            )
+            .add_system(player_texture_atlas_state_system.before(player_animation_system))
+            .add_system(player_animation_system);
     }
 }
 
@@ -28,7 +30,6 @@ struct PlayerTextures {
     pub run: Handle<TextureAtlas>,
     pub fall: Handle<TextureAtlas>,
     pub jump: Handle<TextureAtlas>,
-    pub landing: Handle<TextureAtlas>,
 }
 
 fn player_setup_system(
@@ -56,29 +57,23 @@ fn player_setup_system(
     let jump_atlas = TextureAtlas::from_grid(jump_texture, Vec2::new(17., 34.), 1, 1);
     let jump_handle = texture_atlases.add(jump_atlas);
 
-    // Landing
-    let landing_texture = asset_server.load(LANDING_SHEET);
-    let landing_atlas = TextureAtlas::from_grid(landing_texture, Vec2::new(20., 35.), 1, 1);
-    let landing_handle = texture_atlases.add(landing_atlas);
-
     // PlayerTextures resource
     let player_textures = PlayerTextures {
         idle: idle_handle,
         run: run_handle,
         fall: fall_handle,
         jump: jump_handle,
-        landing: landing_handle,
     };
     commands.insert_resource(player_textures);
 }
 
-fn spawn_player_system(mut commands: Commands, game_textures: Res<PlayerTextures>) {
+fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextures>) {
     // TODO: Load this from world save
     let spawn_pos = Vec3::new(0., 60., 0.);
 
     commands
         .spawn_bundle(SpriteSheetBundle {
-            texture_atlas: game_textures.idle.clone(),
+            texture_atlas: player_textures.idle.clone(),
             transform: Transform {
                 translation: spawn_pos,
                 scale: Vec3::new(SPRITE_SCALE, SPRITE_SCALE, 1.),
@@ -86,7 +81,22 @@ fn spawn_player_system(mut commands: Commands, game_textures: Res<PlayerTextures
             },
             ..Default::default()
         })
-        .insert(Player::default());
+        .insert(Player::default())
+        .insert(AnimationState::IDLE);
+}
+
+fn player_texture_atlas_state_system(
+    player_textures: Res<PlayerTextures>,
+    mut query: Query<(&AnimationState, &mut Handle<TextureAtlas>), With<Player>>,
+) {
+    if let Ok((anim_state, mut atlas_handle)) = query.get_single_mut() {
+        match anim_state {
+            AnimationState::IDLE => atlas_handle.id = player_textures.idle.id,
+            AnimationState::RUNNING => atlas_handle.id = player_textures.run.id,
+            AnimationState::FALLING => atlas_handle.id = player_textures.fall.id,
+            AnimationState::JUMPING => atlas_handle.id = player_textures.jump.id,
+        }
+    }
 }
 
 fn player_animation_system(

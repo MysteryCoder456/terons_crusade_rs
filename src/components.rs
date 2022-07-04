@@ -15,3 +15,11 @@ impl Default for Player {
         }
     }
 }
+
+#[derive(Component)]
+pub enum AnimationState {
+    IDLE,
+    RUNNING,
+    JUMPING,
+    FALLING,
+}
