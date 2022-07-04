@@ -12,6 +12,8 @@ const RUN_SHEET: &str = "player/run.png";
 const FALL_SHEET: &str = "player/fall.png";
 const JUMP_SHEET: &str = "player/jump.png";
 
+const PLAYER_SPEED: f32 = 160.;
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -127,11 +129,9 @@ fn player_movement_system(
     mut query: Query<(&mut Velocity, &mut AnimationState, &mut TextureAtlasSprite), With<Player>>,
 ) {
     if let Ok((mut velocity, mut anim_state, mut sprite)) = query.get_single_mut() {
-        let speed = 160.;
-
         let direction = kb.pressed(KeyCode::D).into_integer() as f32
             - kb.pressed(KeyCode::A).into_integer() as f32;
-        velocity.x = direction * speed;
+        velocity.x = direction * PLAYER_SPEED;
 
         if direction > 0. {
             sprite.flip_x = false;
