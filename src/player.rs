@@ -1,7 +1,9 @@
-use bevy::{core::FixedTimestep, prelude::*};
+use bevy::{
+    core::FixedTimestep, prelude::*, render::render_resource::internal::bytemuck::Contiguous,
+};
 
 use crate::{
-    components::{AnimationState, Player},
+    components::{AnimationState, Player, Velocity},
     SPRITE_SCALE, TIME_STEP,
 };
 
@@ -17,10 +19,12 @@ impl Plugin for PlayerPlugin {
         app.add_startup_system(player_setup_system)
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_player_system)
             .add_system_set(
-                // All physicsrelated stuff here
-                SystemSet::new().with_run_criteria(FixedTimestep::step(TIME_STEP as f64)), // .with_system(player_movement_system)
+                // All physics related stuff here
+                SystemSet::new()
+                    .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
+                    .with_system(player_movement_system),
             )
-            .add_system(player_texture_atlas_state_system.before(player_animation_system))
+            .add_system(player_texture_atlas_state_system)
             .add_system(player_animation_system);
     }
 }
@@ -82,9 +86,11 @@ fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextur
             ..Default::default()
         })
         .insert(Player::default())
-        .insert(AnimationState::IDLE);
+        .insert(AnimationState::IDLE)
+        .insert(Velocity { x: 0., y: 0. });
 }
 
+/// System to switch between player's `TextureAtlas`'s using a state machine
 fn player_texture_atlas_state_system(
     player_textures: Res<PlayerTextures>,
     mut query: Query<(&AnimationState, &mut Handle<TextureAtlas>), With<Player>>,
@@ -99,6 +105,7 @@ fn player_texture_atlas_state_system(
     }
 }
 
+/// System to animate the player's `TextureAtlas`
 fn player_animation_system(
     time: Res<Time>,
     texture_atlases: Res<Assets<TextureAtlas>>,
@@ -109,7 +116,42 @@ fn player_animation_system(
 
         if player.animation_timer.finished() {
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
-            sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
+            sprite.index = (sprite.index + 1) % texture_atlas.len();
+        }
+    }
+}
+
+/// System that handles player movement
+fn player_movement_system(
+    kb: Res<Input<KeyCode>>,
+    mut query: Query<(&mut Velocity, &mut AnimationState, &mut TextureAtlasSprite), With<Player>>,
+) {
+    if let Ok((mut velocity, mut anim_state, mut sprite)) = query.get_single_mut() {
+        let speed = 160.;
+
+        let direction = kb.pressed(KeyCode::D).into_integer() as f32
+            - kb.pressed(KeyCode::A).into_integer() as f32;
+        velocity.x = direction * speed;
+
+        if direction > 0. {
+            sprite.flip_x = false;
+        } else if direction < 0. {
+            sprite.flip_x = true;
+        }
+
+        if direction != 0. {
+            *anim_state = AnimationState::RUNNING;
+        } else {
+            *anim_state = AnimationState::IDLE;
+        }
+
+        // Setting sprite index to 0 to avoid out of bounds errors
+        if kb.just_pressed(KeyCode::D)
+            || kb.just_pressed(KeyCode::A)
+            || kb.just_released(KeyCode::D)
+            || kb.just_released(KeyCode::A)
+        {
+            sprite.index = 0;
         }
     }
 }

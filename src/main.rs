@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::{core::FixedTimestep, prelude::*};
 
-use components::Block;
+use components::{Block, Velocity};
 use player::PlayerPlugin;
 
 mod components;
@@ -29,6 +29,12 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_startup_system(setup_system)
         .add_startup_system_to_stage(StartupStage::PostStartup, spawn_world_system)
+        .add_system_set(
+            // All physics related stuff here
+            SystemSet::new()
+                .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
+                .with_system(velocity_system),
+        )
         .run();
 }
 
@@ -87,4 +93,12 @@ fn spawn_world_system(mut commands: Commands, tile_sets: Res<TileSets>) {
         24,
         Vec3::new(16. * SPRITE_SCALE, -BLOCK_SIZE * SPRITE_SCALE, 0.),
     );
+}
+
+/// System to move entities that have `Velocity` component
+fn velocity_system(mut query: Query<(&mut Transform, &Velocity)>) {
+    for (mut tf, velocity) in query.iter_mut() {
+        tf.translation.x += velocity.x * TIME_STEP;
+        tf.translation.y += velocity.y * TIME_STEP;
+    }
 }
