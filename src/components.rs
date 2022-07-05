@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+// Entity Types
+
 #[derive(Component)]
 pub struct Block;
 
@@ -17,6 +19,13 @@ impl Default for Player {
 }
 
 #[derive(Component)]
+pub struct Actor;
+
+// Entity Types
+
+// Entity Components
+
+#[derive(Component)]
 pub enum AnimationState {
     IDLE,
     RUNNING,
@@ -29,3 +38,5 @@ pub struct Velocity {
     pub x: f32,
     pub y: f32,
 }
+
+// Entity Components
