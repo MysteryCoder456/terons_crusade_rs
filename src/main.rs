@@ -1,6 +1,6 @@
 use bevy::{core::FixedTimestep, prelude::*};
 
-use components::{Block, Velocity};
+use components::{Block, RectCollider, Velocity};
 use player::PlayerPlugin;
 
 mod components;
@@ -11,6 +11,7 @@ const JUNGLE_FLOOR_SHEET: &str = "overworld/jungle_floor.png";
 const TIME_STEP: f32 = 1.0 / 60.0;
 const SPRITE_SCALE: f32 = 2.5;
 const BLOCK_SIZE: f32 = 16.;
+const GRAVITY: f32 = -9.8;
 
 pub struct TileSets {
     pub jungle_floor: Handle<TextureAtlas>,
@@ -33,6 +34,7 @@ fn main() {
             // All physics related stuff here
             SystemSet::new()
                 .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
+                .with_system(block_collision_system.before(velocity_system))
                 .with_system(velocity_system),
         )
         .run();
@@ -93,6 +95,18 @@ fn spawn_world_system(mut commands: Commands, tile_sets: Res<TileSets>) {
         24,
         Vec3::new(16. * SPRITE_SCALE, -BLOCK_SIZE * SPRITE_SCALE, 0.),
     );
+}
+
+/// System for collision between blocks and entities with `RectCollider` component
+fn block_collision_system(
+    mut entity_query: Query<(&mut Transform, &mut Velocity, &RectCollider)>,
+    block_query: Query<&Transform, (With<Block>, Without<RectCollider>)>,
+) {
+    for (mut entity_tf, mut entity_vel, entity_collider) in entity_query.iter_mut() {
+        for block_tf in block_query.iter() {
+            // TODO
+        }
+    }
 }
 
 /// System to move entities that have `Velocity` component

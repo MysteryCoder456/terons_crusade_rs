@@ -38,7 +38,7 @@ pub struct Velocity {
 
 #[derive(Component)]
 pub struct RectCollider {
-    bounding_box: Vec2,
+    pub bounding_box: Vec2,
 }
 
 // Entity Components

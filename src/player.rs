@@ -3,8 +3,8 @@ use bevy::{
 };
 
 use crate::{
-    components::{AnimationState, Player, Velocity},
-    SPRITE_SCALE, TIME_STEP,
+    components::{AnimationState, Player, RectCollider, Velocity},
+    GRAVITY, SPRITE_SCALE, TIME_STEP,
 };
 
 const IDLE_SHEET: &str = "player/idle.png";
@@ -75,7 +75,7 @@ fn player_setup_system(
 
 fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextures>) {
     // TODO: Load this from world save
-    let spawn_pos = Vec3::new(0., 60., 0.);
+    let spawn_pos = Vec3::new(0., 100., 0.);
 
     commands
         .spawn_bundle(SpriteSheetBundle {
@@ -89,7 +89,10 @@ fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextur
         })
         .insert(Player::default())
         .insert(AnimationState::IDLE)
-        .insert(Velocity { x: 0., y: 0. });
+        .insert(Velocity { x: 0., y: 0. })
+        .insert(RectCollider {
+            bounding_box: Vec2::new(22., 36.) * SPRITE_SCALE,
+        });
 }
 
 /// System to switch between player's `TextureAtlas`'s using a state machine
@@ -129,21 +132,31 @@ fn player_movement_system(
     mut query: Query<(&mut Velocity, &mut AnimationState, &mut TextureAtlasSprite), With<Player>>,
 ) {
     if let Ok((mut velocity, mut anim_state, mut sprite)) = query.get_single_mut() {
+        // Horizontal movement
         let direction = kb.pressed(KeyCode::D).into_integer() as f32
             - kb.pressed(KeyCode::A).into_integer() as f32;
         velocity.x = direction * PLAYER_SPEED;
 
+        // Apply gravity
+        velocity.y += GRAVITY;
+
+        // Orient sprite in correct direction
         if direction > 0. {
             sprite.flip_x = false;
         } else if direction < 0. {
             sprite.flip_x = true;
         }
 
-        if direction != 0. {
-            *anim_state = AnimationState::RUNNING;
+        // Update state machine
+        *anim_state = if velocity.y < 0. {
+            AnimationState::FALLING
+        } else if velocity.y > 0. {
+            AnimationState::JUMPING
+        } else if direction != 0. {
+            AnimationState::RUNNING
         } else {
-            *anim_state = AnimationState::IDLE;
-        }
+            AnimationState::IDLE
+        };
 
         // Setting sprite index to 0 to avoid out of bounds errors
         if kb.just_pressed(KeyCode::D)
