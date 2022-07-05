@@ -1,5 +1,7 @@
 use bevy::{
-    core::FixedTimestep, prelude::*, render::render_resource::internal::bytemuck::Contiguous,
+    core::{FixedTimestep, Zeroable},
+    prelude::*,
+    render::render_resource::internal::bytemuck::Contiguous,
 };
 use bevy_rapier2d::prelude::*;
 
@@ -130,12 +132,20 @@ fn player_animation_system(
 /// System that handles player movement
 fn player_movement_system(
     kb: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Velocity, &mut AnimationState, &mut TextureAtlasSprite), With<Player>>,
+    mut query: Query<
+        (
+            &mut Transform,
+            &mut Velocity,
+            &mut AnimationState,
+            &mut TextureAtlasSprite,
+        ),
+        With<Player>,
+    >,
 ) {
-    if let Ok((mut velocity, mut anim_state, mut sprite)) = query.get_single_mut() {
-        // Keep angular velocity fixed
-        // FIXME: Player rotates when falling off the edge of a block
+    if let Ok((mut transform, mut velocity, mut anim_state, mut sprite)) = query.get_single_mut() {
+        // Keep angular velocity and rotation fixed
         velocity.angvel = 0.;
+        transform.rotation = Quat::zeroed();
 
         // Horizontal movement
         let direction = kb.pressed(KeyCode::D).into_integer() as f32

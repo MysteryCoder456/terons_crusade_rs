@@ -13,5 +13,5 @@ bevy_rapier2d = "^0.14"
 [workspace]
 resolver = "2"
 
-[profile.dev.package.rapier3d]
+[profile.dev.package.rapier2d]
 opt-level = 3
