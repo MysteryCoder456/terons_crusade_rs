@@ -91,7 +91,7 @@ fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextur
             ..Default::default()
         })
         .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(22. / 2., 31. / 2.))
+        .insert(Collider::capsule_y(8., 9.))
         .insert(Velocity::zero())
         .insert(GravityScale(1.))
         .insert(Player::default())
@@ -121,6 +121,8 @@ fn player_animation_system(
 ) {
     if let Ok((mut sprite, mut player, atlas_handle)) = query.get_single_mut() {
         player.animation_timer.tick(time.delta());
+
+        // FIXME: program sometimes panics due to sprite index being invalid
 
         if player.animation_timer.finished() {
             let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
