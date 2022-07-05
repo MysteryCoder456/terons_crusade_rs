@@ -18,9 +18,6 @@ impl Default for Player {
     }
 }
 
-#[derive(Component)]
-pub struct Actor;
-
 // Entity Types
 
 // Entity Components
@@ -37,6 +34,11 @@ pub enum AnimationState {
 pub struct Velocity {
     pub x: f32,
     pub y: f32,
+}
+
+#[derive(Component)]
+pub struct RectCollider {
+    bounding_box: Vec2,
 }
 
 // Entity Components
