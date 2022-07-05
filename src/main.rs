@@ -1,6 +1,7 @@
-use bevy::{core::FixedTimestep, prelude::*};
+use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
-use components::{Block, RectCollider, Velocity};
+use components::Block;
 use player::PlayerPlugin;
 
 mod components;
@@ -11,7 +12,6 @@ const JUNGLE_FLOOR_SHEET: &str = "overworld/jungle_floor.png";
 const TIME_STEP: f32 = 1.0 / 60.0;
 const SPRITE_SCALE: f32 = 2.5;
 const BLOCK_SIZE: f32 = 16.;
-const GRAVITY: f32 = -9.8;
 
 pub struct TileSets {
     pub jungle_floor: Handle<TextureAtlas>,
@@ -27,16 +27,12 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
+            SPRITE_SCALE,
+        ))
         .add_plugin(PlayerPlugin)
         .add_startup_system(setup_system)
         .add_startup_system_to_stage(StartupStage::PostStartup, spawn_world_system)
-        .add_system_set(
-            // All physics related stuff here
-            SystemSet::new()
-                .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
-                .with_system(block_collision_system.before(velocity_system))
-                .with_system(velocity_system),
-        )
         .run();
 }
 
@@ -47,6 +43,13 @@ fn setup_system(
 ) {
     // Add camera bundles
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+
+    // Add Rapier configurations
+    let rapier_config = RapierConfiguration {
+        gravity: Vec2::new(0., -300.),
+        ..Default::default()
+    };
+    commands.insert_resource(rapier_config);
 
     // Jungle floor texture atlas
     let jungle_floor_texture = asset_server.load(JUNGLE_FLOOR_SHEET);
@@ -80,7 +83,9 @@ fn spawn_world_system(mut commands: Commands, tile_sets: Res<TileSets>) {
                 },
                 ..Default::default()
             })
-            .insert(Block);
+            .insert(Block)
+            .insert(RigidBody::Fixed)
+            .insert(Collider::cuboid(BLOCK_SIZE / 2., BLOCK_SIZE / 2.));
     };
 
     spawn_tile(0, Vec3::new(-BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
@@ -95,24 +100,4 @@ fn spawn_world_system(mut commands: Commands, tile_sets: Res<TileSets>) {
         24,
         Vec3::new(16. * SPRITE_SCALE, -BLOCK_SIZE * SPRITE_SCALE, 0.),
     );
-}
-
-/// System for collision between blocks and entities with `RectCollider` component
-fn block_collision_system(
-    mut entity_query: Query<(&mut Transform, &mut Velocity, &RectCollider)>,
-    block_query: Query<&Transform, (With<Block>, Without<RectCollider>)>,
-) {
-    for (mut entity_tf, mut entity_vel, entity_collider) in entity_query.iter_mut() {
-        for block_tf in block_query.iter() {
-            // TODO
-        }
-    }
-}
-
-/// System to move entities that have `Velocity` component
-fn velocity_system(mut query: Query<(&mut Transform, &Velocity)>) {
-    for (mut tf, velocity) in query.iter_mut() {
-        tf.translation.x += velocity.x * TIME_STEP;
-        tf.translation.y += velocity.y * TIME_STEP;
-    }
 }

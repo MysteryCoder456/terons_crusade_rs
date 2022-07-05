@@ -1,10 +1,11 @@
 use bevy::{
     core::FixedTimestep, prelude::*, render::render_resource::internal::bytemuck::Contiguous,
 };
+use bevy_rapier2d::prelude::*;
 
 use crate::{
-    components::{AnimationState, Player, RectCollider, Velocity},
-    GRAVITY, SPRITE_SCALE, TIME_STEP,
+    components::{AnimationState, AnimationStates, Player},
+    SPRITE_SCALE, TIME_STEP,
 };
 
 const IDLE_SHEET: &str = "player/idle.png";
@@ -75,7 +76,7 @@ fn player_setup_system(
 
 fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextures>) {
     // TODO: Load this from world save
-    let spawn_pos = Vec3::new(0., 100., 0.);
+    let spawn_pos = Vec3::new(0., 300., 0.);
 
     commands
         .spawn_bundle(SpriteSheetBundle {
@@ -87,12 +88,12 @@ fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextur
             },
             ..Default::default()
         })
+        .insert(RigidBody::Dynamic)
+        .insert(Collider::cuboid(22. / 2., 31. / 2.))
+        .insert(Velocity::zero())
+        .insert(GravityScale(1.))
         .insert(Player::default())
-        .insert(AnimationState::IDLE)
-        .insert(Velocity { x: 0., y: 0. })
-        .insert(RectCollider {
-            bounding_box: Vec2::new(22., 36.) * SPRITE_SCALE,
-        });
+        .insert(AnimationState::default());
 }
 
 /// System to switch between player's `TextureAtlas`'s using a state machine
@@ -101,11 +102,11 @@ fn player_texture_atlas_state_system(
     mut query: Query<(&AnimationState, &mut Handle<TextureAtlas>), With<Player>>,
 ) {
     if let Ok((anim_state, mut atlas_handle)) = query.get_single_mut() {
-        match anim_state {
-            AnimationState::IDLE => atlas_handle.id = player_textures.idle.id,
-            AnimationState::RUNNING => atlas_handle.id = player_textures.run.id,
-            AnimationState::FALLING => atlas_handle.id = player_textures.fall.id,
-            AnimationState::JUMPING => atlas_handle.id = player_textures.jump.id,
+        match anim_state.current {
+            AnimationStates::IDLE => atlas_handle.id = player_textures.idle.id,
+            AnimationStates::RUNNING => atlas_handle.id = player_textures.run.id,
+            AnimationStates::FALLING => atlas_handle.id = player_textures.fall.id,
+            AnimationStates::JUMPING => atlas_handle.id = player_textures.jump.id,
         }
     }
 }
@@ -132,13 +133,14 @@ fn player_movement_system(
     mut query: Query<(&mut Velocity, &mut AnimationState, &mut TextureAtlasSprite), With<Player>>,
 ) {
     if let Ok((mut velocity, mut anim_state, mut sprite)) = query.get_single_mut() {
+        // Keep angular velocity fixed
+        // FIXME: Player rotates when falling off the edge of a block
+        velocity.angvel = 0.;
+
         // Horizontal movement
         let direction = kb.pressed(KeyCode::D).into_integer() as f32
             - kb.pressed(KeyCode::A).into_integer() as f32;
-        velocity.x = direction * PLAYER_SPEED;
-
-        // Apply gravity
-        velocity.y += GRAVITY;
+        velocity.linvel.x = direction * PLAYER_SPEED;
 
         // Orient sprite in correct direction
         if direction > 0. {
@@ -148,22 +150,19 @@ fn player_movement_system(
         }
 
         // Update state machine
-        *anim_state = if velocity.y < 0. {
-            AnimationState::FALLING
-        } else if velocity.y > 0. {
-            AnimationState::JUMPING
+        anim_state.previous = anim_state.current.clone();
+        anim_state.current = if velocity.linvel.y < -5. {
+            AnimationStates::FALLING
+        } else if velocity.linvel.y > 5. {
+            AnimationStates::JUMPING
         } else if direction != 0. {
-            AnimationState::RUNNING
+            AnimationStates::RUNNING
         } else {
-            AnimationState::IDLE
+            AnimationStates::IDLE
         };
 
-        // Setting sprite index to 0 to avoid out of bounds errors
-        if kb.just_pressed(KeyCode::D)
-            || kb.just_pressed(KeyCode::A)
-            || kb.just_released(KeyCode::D)
-            || kb.just_released(KeyCode::A)
-        {
+        // Reset sprite index to 0 to avoid animation issues
+        if anim_state.current != anim_state.previous {
             sprite.index = 0;
         }
     }

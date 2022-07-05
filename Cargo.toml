@@ -8,6 +8,10 @@ edition = "2021"
 
 [dependencies]
 bevy = "^0.7"
+bevy_rapier2d = "^0.14"
 
 [workspace]
 resolver = "2"
+
+[profile.dev.package.rapier3d]
+opt-level = 3

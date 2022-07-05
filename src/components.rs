@@ -23,22 +23,26 @@ impl Default for Player {
 // Entity Components
 
 #[derive(Component)]
-pub enum AnimationState {
+pub struct AnimationState {
+    pub current: AnimationStates,
+    pub previous: AnimationStates,
+}
+
+impl Default for AnimationState {
+    fn default() -> Self {
+        Self {
+            current: AnimationStates::IDLE,
+            previous: AnimationStates::IDLE,
+        }
+    }
+}
+
+#[derive(Component, Clone, PartialEq)]
+pub enum AnimationStates {
     IDLE,
     RUNNING,
     JUMPING,
     FALLING,
-}
-
-#[derive(Component)]
-pub struct Velocity {
-    pub x: f32,
-    pub y: f32,
-}
-
-#[derive(Component)]
-pub struct RectCollider {
-    pub bounding_box: Vec2,
 }
 
 // Entity Components
