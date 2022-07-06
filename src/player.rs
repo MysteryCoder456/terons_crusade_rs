@@ -16,6 +16,7 @@ const FALL_SHEET: &str = "player/fall.png";
 const JUMP_SHEET: &str = "player/jump.png";
 
 const PLAYER_SPEED: f32 = 160.;
+const PLAYER_JUMP_SPEED: f32 = 520.;
 
 pub struct PlayerPlugin;
 
@@ -149,6 +150,13 @@ fn player_movement_system(
             - kb.pressed(KeyCode::A).into_integer() as f32;
         velocity.linvel.x = direction * PLAYER_SPEED;
 
+        // Jumping
+        if kb.just_pressed(KeyCode::W) || kb.just_pressed(KeyCode::Space) {
+            if -1. < velocity.linvel.y && velocity.linvel.y < 1. {
+                velocity.linvel.y += PLAYER_JUMP_SPEED;
+            }
+        }
+
         // Orient sprite in correct direction
         if direction > 0. {
             sprite.flip_x = false;
@@ -158,9 +166,9 @@ fn player_movement_system(
 
         // Update state machine
         anim_state.previous = anim_state.current.clone();
-        anim_state.current = if velocity.linvel.y < -5. {
+        anim_state.current = if velocity.linvel.y < -10. {
             AnimationStates::FALLING
-        } else if velocity.linvel.y > 5. {
+        } else if velocity.linvel.y > 10. {
             AnimationStates::JUMPING
         } else if direction != 0. {
             AnimationStates::RUNNING

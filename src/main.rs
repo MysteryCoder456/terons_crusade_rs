@@ -46,7 +46,7 @@ fn setup_system(
 
     // Add Rapier configurations
     let rapier_config = RapierConfiguration {
-        gravity: Vec2::new(0., -300.),
+        gravity: Vec2::new(0., -1500.),
         ..Default::default()
     };
     commands.insert_resource(rapier_config);
