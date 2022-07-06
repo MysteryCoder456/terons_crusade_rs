@@ -29,7 +29,6 @@ impl Plugin for PlayerPlugin {
                     .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
                     .with_system(player_movement_system),
             )
-            .add_system(player_texture_atlas_state_system)
             .add_system(player_animation_system);
     }
 }
@@ -98,34 +97,30 @@ fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextur
         .insert(AnimationState::default());
 }
 
-/// System to switch between player's `TextureAtlas`'s using a state machine
-fn player_texture_atlas_state_system(
+/// System to animate the player's `TextureAtlas`
+fn player_animation_system(
+    time: Res<Time>,
     player_textures: Res<PlayerTextures>,
-    mut query: Query<(&AnimationState, &mut Handle<TextureAtlas>), With<Player>>,
+    texture_atlases: Res<Assets<TextureAtlas>>,
+    mut query: Query<(
+        &mut TextureAtlasSprite,
+        &mut Player,
+        &mut Handle<TextureAtlas>,
+        &AnimationState,
+    )>,
 ) {
-    if let Ok((anim_state, mut atlas_handle)) = query.get_single_mut() {
+    if let Ok((mut sprite, mut player, mut atlas_handle, anim_state)) = query.get_single_mut() {
+        player.animation_timer.tick(time.delta());
+
         match anim_state.current {
             AnimationStates::IDLE => atlas_handle.id = player_textures.idle.id,
             AnimationStates::RUNNING => atlas_handle.id = player_textures.run.id,
             AnimationStates::FALLING => atlas_handle.id = player_textures.fall.id,
             AnimationStates::JUMPING => atlas_handle.id = player_textures.jump.id,
         }
-    }
-}
-
-/// System to animate the player's `TextureAtlas`
-fn player_animation_system(
-    time: Res<Time>,
-    texture_atlases: Res<Assets<TextureAtlas>>,
-    mut query: Query<(&mut TextureAtlasSprite, &mut Player, &Handle<TextureAtlas>)>,
-) {
-    if let Ok((mut sprite, mut player, atlas_handle)) = query.get_single_mut() {
-        player.animation_timer.tick(time.delta());
-
-        // FIXME: program sometimes panics due to sprite index being invalid
 
         if player.animation_timer.finished() {
-            let texture_atlas = texture_atlases.get(atlas_handle).unwrap();
+            let texture_atlas = texture_atlases.get(atlas_handle.clone()).unwrap();
             sprite.index = (sprite.index + 1) % texture_atlas.len();
         }
     }

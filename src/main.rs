@@ -88,16 +88,52 @@ fn spawn_world_system(mut commands: Commands, tile_sets: Res<TileSets>) {
             .insert(Collider::cuboid(BLOCK_SIZE / 2., BLOCK_SIZE / 2.));
     };
 
-    spawn_tile(0, Vec3::new(-BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
+    spawn_tile(0, Vec3::new(-3. * BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
+    spawn_tile(2, Vec3::new(-2. * BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
+    spawn_tile(2, Vec3::new(-BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
     spawn_tile(2, Vec3::new(0., 0., 0.));
-    spawn_tile(4, Vec3::new(BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
+    spawn_tile(2, Vec3::new(BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
+    spawn_tile(2, Vec3::new(2. * BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
+    spawn_tile(4, Vec3::new(3. * BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
     spawn_tile(
         20,
+        Vec3::new(
+            -3. * BLOCK_SIZE * SPRITE_SCALE,
+            -BLOCK_SIZE * SPRITE_SCALE,
+            0.,
+        ),
+    );
+    spawn_tile(
+        22,
+        Vec3::new(
+            -2. * BLOCK_SIZE * SPRITE_SCALE,
+            -BLOCK_SIZE * SPRITE_SCALE,
+            0.,
+        ),
+    );
+    spawn_tile(
+        22,
         Vec3::new(-BLOCK_SIZE * SPRITE_SCALE, -BLOCK_SIZE * SPRITE_SCALE, 0.),
     );
     spawn_tile(22, Vec3::new(0., -BLOCK_SIZE * SPRITE_SCALE, 0.));
     spawn_tile(
+        22,
+        Vec3::new(BLOCK_SIZE * SPRITE_SCALE, -BLOCK_SIZE * SPRITE_SCALE, 0.),
+    );
+    spawn_tile(
+        22,
+        Vec3::new(
+            2. * BLOCK_SIZE * SPRITE_SCALE,
+            -BLOCK_SIZE * SPRITE_SCALE,
+            0.,
+        ),
+    );
+    spawn_tile(
         24,
-        Vec3::new(16. * SPRITE_SCALE, -BLOCK_SIZE * SPRITE_SCALE, 0.),
+        Vec3::new(
+            3. * BLOCK_SIZE * SPRITE_SCALE,
+            -BLOCK_SIZE * SPRITE_SCALE,
+            0.,
+        ),
     );
 }
