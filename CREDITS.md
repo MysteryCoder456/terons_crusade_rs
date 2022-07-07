@@ -1,7 +1,7 @@
 # Credits
 
 **Programming:**
-1. MysteryCoder456
+1. Rehatbir Singh (GitHub - MysteryCoder456)
 
 **Art:**
 1. Jesse M (Twitter - @Jsf23Art)
