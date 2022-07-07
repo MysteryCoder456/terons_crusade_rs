@@ -15,8 +15,8 @@ const RUN_SHEET: &str = "player/run.png";
 const FALL_SHEET: &str = "player/fall.png";
 const JUMP_SHEET: &str = "player/jump.png";
 
-const PLAYER_SPEED: f32 = 160.;
-const PLAYER_JUMP_SPEED: f32 = 520.;
+const PLAYER_SPEED: f32 = 170.;
+const PLAYER_JUMP_SPEED: f32 = 530.;
 
 pub struct PlayerPlugin;
 
@@ -152,7 +152,7 @@ fn player_movement_system(
 
         // Jumping
         if kb.just_pressed(KeyCode::W) || kb.just_pressed(KeyCode::Space) {
-            if -1. < velocity.linvel.y && velocity.linvel.y < 1. {
+            if -1.5 < velocity.linvel.y && velocity.linvel.y < 1.5 {
                 velocity.linvel.y += PLAYER_JUMP_SPEED;
             }
         }
@@ -166,9 +166,9 @@ fn player_movement_system(
 
         // Update state machine
         anim_state.previous = anim_state.current.clone();
-        anim_state.current = if velocity.linvel.y < -10. {
+        anim_state.current = if velocity.linvel.y < -12. {
             AnimationStates::FALLING
-        } else if velocity.linvel.y > 10. {
+        } else if velocity.linvel.y > 12. {
             AnimationStates::JUMPING
         } else if direction != 0. {
             AnimationStates::RUNNING
