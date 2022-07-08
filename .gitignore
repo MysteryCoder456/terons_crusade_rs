@@ -14,3 +14,6 @@ target/
 *.pdb
 
 .DS_Store
+
+# Game save data
+save_data

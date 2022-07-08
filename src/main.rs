@@ -2,10 +2,12 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use player::PlayerPlugin;
+use save_data::SaveDataPlugin;
 use tile_map::TileMapPlugin;
 
 mod components;
 mod player;
+mod save_data;
 mod tile_map;
 
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -26,6 +28,7 @@ fn main() {
         ))
         .add_plugin(PlayerPlugin)
         .add_plugin(TileMapPlugin)
+        .add_plugin(SaveDataPlugin)
         .add_startup_system(setup_system)
         .run();
 }

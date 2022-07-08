@@ -3,7 +3,7 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{components::Block, SPRITE_SCALE};
 
-const JUNGLE_FLOOR_SHEET: &str = "overworld/jungle_floor.png";
+const JUNGLE_FLOOR_SHEET: &str = "tile_sets/overworld/jungle_floor.png";
 const BLOCK_SIZE: f32 = 16.;
 
 pub struct TileMapPlugin;
