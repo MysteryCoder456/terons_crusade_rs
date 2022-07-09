@@ -117,7 +117,7 @@ struct PositionData {
 }
 
 /// System that loads/generates the game save data.
-/// You'll a lot of `unwrap` and/or `expect` calls here since
+/// You'll see a lot of `unwrap` and/or `expect` calls here since
 /// having the game crash at startup is usually not as annoying.
 fn save_data_setup_system(mut commands: Commands) {
     // Path to directory that holds save files
