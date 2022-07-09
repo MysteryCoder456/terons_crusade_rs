@@ -46,3 +46,14 @@ pub enum AnimationStates {
 }
 
 // Entity Components
+
+// Entity Spawner Components
+
+#[derive(Component)]
+pub struct SpawnBlock {
+    pub tile_set: String,
+    pub tile_index: usize,
+    pub tile_pos: Vec2,
+}
+
+// Entity Spawner Components

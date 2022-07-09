@@ -1,6 +1,8 @@
 use bevy::{prelude::*, utils::HashSet};
 use serde::{Deserialize, Serialize};
 
+use crate::components::SpawnBlock;
+
 const SAVE_DATA_PATH: &str = "save_data";
 
 pub struct SaveDataPlugin;
@@ -19,9 +21,84 @@ struct WorldSaveData {
 }
 
 impl Default for WorldSaveData {
+    /// Default world, will change in the future.
     fn default() -> Self {
+        let mut default_blocks = HashSet::<BlockData>::new();
+
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 0,
+            tile_pos: PositionData { x: -3, y: 0 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 2,
+            tile_pos: PositionData { x: -2, y: 0 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 2,
+            tile_pos: PositionData { x: -1, y: 0 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 2,
+            tile_pos: PositionData { x: 0, y: 0 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 2,
+            tile_pos: PositionData { x: 1, y: 0 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 2,
+            tile_pos: PositionData { x: 2, y: 0 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 4,
+            tile_pos: PositionData { x: 3, y: 0 },
+        });
+
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 20,
+            tile_pos: PositionData { x: -3, y: -1 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 22,
+            tile_pos: PositionData { x: -2, y: -1 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 22,
+            tile_pos: PositionData { x: -1, y: -1 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 22,
+            tile_pos: PositionData { x: 0, y: -1 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 22,
+            tile_pos: PositionData { x: 1, y: -1 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 22,
+            tile_pos: PositionData { x: 2, y: -1 },
+        });
+        default_blocks.insert(BlockData {
+            tile_set: "jungle_floor".to_owned(),
+            tile_index: 24,
+            tile_pos: PositionData { x: 3, y: -1 },
+        });
+
         Self {
-            blocks: HashSet::default(),
+            blocks: default_blocks,
         }
     }
 }
@@ -29,8 +106,8 @@ impl Default for WorldSaveData {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
 struct BlockData {
     pub tile_set: String,
-    pub tile_id: usize,
-    pub position: PositionData,
+    pub tile_index: usize,
+    pub tile_pos: PositionData,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -42,7 +119,7 @@ struct PositionData {
 /// System that loads/generates the game save data.
 /// You'll a lot of `unwrap` and/or `expect` calls here since
 /// having the game crash at startup is usually not as annoying.
-fn save_data_setup_system() {
+fn save_data_setup_system(mut commands: Commands) {
     // Path to directory that holds save files
     let save_data_path = std::path::Path::new(SAVE_DATA_PATH);
 
@@ -54,16 +131,29 @@ fn save_data_setup_system() {
     // Load world data
     let world_data_path = save_data_path.join("world_data.json");
 
-    if world_data_path.exists() {
+    let world_data = if world_data_path.exists() {
+        // Load world data from save file
         let json_text =
             std::fs::read_to_string(world_data_path).expect("Error reading world save data!");
-        let world_data: WorldSaveData =
-            serde_json::from_str(&json_text).expect("Error parsing world data!");
 
-        // TODO: Load world
+        serde_json::from_str(&json_text).expect("Error parsing world data!")
     } else {
-        let default_world_data = serde_json::to_string(&WorldSaveData::default())
-            .expect("Error serializing world data!");
-        std::fs::write(world_data_path, default_world_data).expect("Error writing world data!");
+        // Generate and save default world
+        let default_world_data = WorldSaveData::default();
+        let default_world_serialized =
+            serde_json::to_string(&default_world_data).expect("Error serializing world data!");
+        std::fs::write(world_data_path, default_world_serialized)
+            .expect("Error writing world data!");
+
+        default_world_data
+    };
+
+    // Spawn world
+    for block_data in world_data.blocks {
+        commands.spawn().insert(SpawnBlock {
+            tile_set: block_data.tile_set,
+            tile_index: block_data.tile_index,
+            tile_pos: Vec2::new(block_data.tile_pos.x as f32, block_data.tile_pos.y as f32),
+        });
     }
 }

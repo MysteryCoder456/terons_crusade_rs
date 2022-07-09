@@ -1,22 +1,23 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use bevy_rapier2d::prelude::*;
 
-use crate::{components::Block, SPRITE_SCALE};
+use crate::{
+    components::{Block, SpawnBlock},
+    SPRITE_SCALE,
+};
 
 const JUNGLE_FLOOR_SHEET: &str = "tile_sets/overworld/jungle_floor.png";
 const BLOCK_SIZE: f32 = 16.;
+
+type TileSets = HashMap<String, Handle<TextureAtlas>>;
 
 pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(tile_map_setup_system)
-            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_world_system);
+            .add_system(block_spawn_system);
     }
-}
-
-pub struct TileSets {
-    pub jungle_floor: Handle<TextureAtlas>,
 }
 
 fn tile_map_setup_system(
@@ -34,79 +35,48 @@ fn tile_map_setup_system(
     );
     let jungle_floor = texture_atlases.add(jungle_floor_atlas);
 
-    let tile_sets = TileSets { jungle_floor };
+    let mut tile_sets = TileSets::new();
+    tile_sets.insert("jungle_floor".to_owned(), jungle_floor);
     commands.insert_resource(tile_sets);
 }
 
-fn spawn_world_system(mut commands: Commands, tile_sets: Res<TileSets>) {
-    // TODO: Add world loading and saving
+fn block_spawn_system(
+    mut commands: Commands,
+    tile_sets: Res<TileSets>,
+    query: Query<(Entity, &SpawnBlock)>,
+) {
+    for (entity, spawn_data) in query.iter() {
+        if let Some(atlas_handle) = tile_sets.get(&spawn_data.tile_set) {
+            let translation = Vec3::new(spawn_data.tile_pos.x, spawn_data.tile_pos.y, 0.0)
+                * SPRITE_SCALE
+                * BLOCK_SIZE;
+            let mut new_handle = Handle::<TextureAtlas>::default();
+            new_handle.id = atlas_handle.id;
 
-    let mut spawn_tile = |index: usize, translation: Vec3| {
-        commands
-            .spawn_bundle(SpriteSheetBundle {
-                texture_atlas: tile_sets.jungle_floor.clone(),
-                transform: Transform {
-                    translation,
-                    scale: Vec3::new(SPRITE_SCALE, SPRITE_SCALE, SPRITE_SCALE),
+            commands
+                .spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: new_handle,
+                    transform: Transform {
+                        translation,
+                        scale: Vec3::new(SPRITE_SCALE, SPRITE_SCALE, SPRITE_SCALE),
+                        ..Default::default()
+                    },
+                    sprite: TextureAtlasSprite {
+                        index: spawn_data.tile_index,
+                        ..Default::default()
+                    },
                     ..Default::default()
-                },
-                sprite: TextureAtlasSprite {
-                    index,
-                    ..Default::default()
-                },
-                ..Default::default()
-            })
-            .insert(Block)
-            .insert(RigidBody::Fixed)
-            .insert(Collider::cuboid(BLOCK_SIZE / 2., BLOCK_SIZE / 2.));
-    };
+                })
+                .insert(Block)
+                .insert(RigidBody::Fixed)
+                .insert(Collider::cuboid(BLOCK_SIZE / 2., BLOCK_SIZE / 2.));
+        } else {
+            eprintln!(
+                "Tried to spawn block belonging to undefined tile set: {}",
+                spawn_data.tile_set
+            );
+        }
 
-    spawn_tile(0, Vec3::new(-3. * BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
-    spawn_tile(2, Vec3::new(-2. * BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
-    spawn_tile(2, Vec3::new(-BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
-    spawn_tile(2, Vec3::new(0., 0., 0.));
-    spawn_tile(2, Vec3::new(BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
-    spawn_tile(2, Vec3::new(2. * BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
-    spawn_tile(4, Vec3::new(3. * BLOCK_SIZE * SPRITE_SCALE, 0., 0.));
-    spawn_tile(
-        20,
-        Vec3::new(
-            -3. * BLOCK_SIZE * SPRITE_SCALE,
-            -BLOCK_SIZE * SPRITE_SCALE,
-            0.,
-        ),
-    );
-    spawn_tile(
-        22,
-        Vec3::new(
-            -2. * BLOCK_SIZE * SPRITE_SCALE,
-            -BLOCK_SIZE * SPRITE_SCALE,
-            0.,
-        ),
-    );
-    spawn_tile(
-        22,
-        Vec3::new(-BLOCK_SIZE * SPRITE_SCALE, -BLOCK_SIZE * SPRITE_SCALE, 0.),
-    );
-    spawn_tile(22, Vec3::new(0., -BLOCK_SIZE * SPRITE_SCALE, 0.));
-    spawn_tile(
-        22,
-        Vec3::new(BLOCK_SIZE * SPRITE_SCALE, -BLOCK_SIZE * SPRITE_SCALE, 0.),
-    );
-    spawn_tile(
-        22,
-        Vec3::new(
-            2. * BLOCK_SIZE * SPRITE_SCALE,
-            -BLOCK_SIZE * SPRITE_SCALE,
-            0.,
-        ),
-    );
-    spawn_tile(
-        24,
-        Vec3::new(
-            3. * BLOCK_SIZE * SPRITE_SCALE,
-            -BLOCK_SIZE * SPRITE_SCALE,
-            0.,
-        ),
-    );
+        commands.entity(entity).despawn();
+    }
 }
