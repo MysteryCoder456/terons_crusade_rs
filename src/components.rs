@@ -3,6 +3,9 @@ use bevy::prelude::*;
 // Entity Types
 
 #[derive(Component)]
+pub struct MainCamera;
+
+#[derive(Component)]
 pub struct Block;
 
 #[derive(Component)]

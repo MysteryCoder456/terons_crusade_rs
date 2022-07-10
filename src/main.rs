@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+use components::MainCamera;
 use player::PlayerPlugin;
 use save_data::SaveDataPlugin;
 use tile_map::TileMapPlugin;
@@ -35,7 +36,9 @@ fn main() {
 
 fn setup_system(mut commands: Commands) {
     // Add camera bundles
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands
+        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .insert(MainCamera);
 
     // Add Rapier configurations
     let rapier_config = RapierConfiguration {

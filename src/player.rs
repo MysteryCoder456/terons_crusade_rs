@@ -6,7 +6,7 @@ use bevy::{
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    components::{AnimationState, AnimationStates, Player},
+    components::{AnimationState, AnimationStates, MainCamera, Player},
     SPRITE_SCALE, TIME_STEP,
 };
 
@@ -25,9 +25,10 @@ impl Plugin for PlayerPlugin {
         app.add_startup_system(player_setup_system)
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_player_system)
             .add_system_set(
-                // All physics related stuff here
+                // All physics and movement related systems here
                 SystemSet::new()
                     .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
+                    .with_system(player_camera_follow_system)
                     .with_system(player_movement_system),
             )
             .add_system(player_animation_system);
@@ -98,6 +99,20 @@ fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextur
         .insert(AnimationState::default());
 }
 
+/// System that makes the main camera follow the player
+fn player_camera_follow_system(
+    time: Res<Time>,
+    player_query: Query<&Transform, With<Player>>,
+    mut camera_query: Query<&mut Transform, (With<MainCamera>, Without<Player>)>,
+) {
+    if let Ok(player_tf) = player_query.get_single() {
+        if let Ok(mut camera_tf) = camera_query.get_single_mut() {
+            let cam_velocity = (player_tf.translation - camera_tf.translation) * 5.;
+            camera_tf.translation += cam_velocity * time.delta_seconds();
+        }
+    }
+}
+
 /// System to animate the player's `TextureAtlas`
 fn player_animation_system(
     time: Res<Time>,
@@ -151,10 +166,11 @@ fn player_movement_system(
         velocity.linvel.x = direction * PLAYER_SPEED;
 
         // Jumping
-        if kb.just_pressed(KeyCode::W) || kb.just_pressed(KeyCode::Space) {
-            if -1.5 < velocity.linvel.y && velocity.linvel.y < 1.5 {
-                velocity.linvel.y += PLAYER_JUMP_SPEED;
-            }
+        if (kb.just_pressed(KeyCode::W) || kb.just_pressed(KeyCode::Space))
+            && -1.5 < velocity.linvel.y
+            && velocity.linvel.y < 1.5
+        {
+            velocity.linvel.y += PLAYER_JUMP_SPEED;
         }
 
         // Orient sprite in correct direction
