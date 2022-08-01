@@ -1,5 +1,5 @@
 use bevy::{prelude::*, utils::HashMap};
-use bevy_rapier2d::prelude::*;
+// use bevy_rapier2d::prelude::*;
 
 use crate::{components::SpawnItem, SPRITE_SCALE};
 
