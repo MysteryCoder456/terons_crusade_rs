@@ -34,18 +34,18 @@ pub struct AnimationState {
 impl Default for AnimationState {
     fn default() -> Self {
         Self {
-            current: AnimationStates::IDLE,
-            previous: AnimationStates::IDLE,
+            current: AnimationStates::Idle,
+            previous: AnimationStates::Idle,
         }
     }
 }
 
 #[derive(Component, Clone, PartialEq)]
 pub enum AnimationStates {
-    IDLE,
-    RUNNING,
-    JUMPING,
-    FALLING,
+    Idle,
+    Running,
+    Jumping,
+    Falling,
 }
 
 // Entity Components

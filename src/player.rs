@@ -128,12 +128,12 @@ fn player_animation_system(
     if let Ok((mut sprite, mut player, mut atlas_handle, anim_state)) = query.get_single_mut() {
         player.animation_timer.tick(time.delta());
 
-        match anim_state.current {
-            AnimationStates::IDLE => atlas_handle.id = player_textures.idle.id,
-            AnimationStates::RUNNING => atlas_handle.id = player_textures.run.id,
-            AnimationStates::FALLING => atlas_handle.id = player_textures.fall.id,
-            AnimationStates::JUMPING => atlas_handle.id = player_textures.jump.id,
-        }
+        atlas_handle.id = match anim_state.current {
+            AnimationStates::Idle => player_textures.idle.id,
+            AnimationStates::Running => player_textures.run.id,
+            AnimationStates::Falling => player_textures.fall.id,
+            AnimationStates::Jumping => player_textures.jump.id,
+        };
 
         if player.animation_timer.finished() {
             let texture_atlas = texture_atlases.get(atlas_handle.clone()).unwrap();
@@ -183,13 +183,13 @@ fn player_movement_system(
         // Update state machine
         anim_state.previous = anim_state.current.clone();
         anim_state.current = if velocity.linvel.y < -12. {
-            AnimationStates::FALLING
+            AnimationStates::Falling
         } else if velocity.linvel.y > 12. {
-            AnimationStates::JUMPING
+            AnimationStates::Jumping
         } else if direction != 0. {
-            AnimationStates::RUNNING
+            AnimationStates::Running
         } else {
-            AnimationStates::IDLE
+            AnimationStates::Idle
         };
 
         // Reset sprite index to 0 to avoid animation issues
