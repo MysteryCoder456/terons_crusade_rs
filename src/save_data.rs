@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashSet};
 use serde::{Deserialize, Serialize};
 
-use crate::components::SpawnBlock;
+use crate::components::{SpawnBlock, SpawnItem};
 
 const SAVE_DATA_PATH: &str = "save_data";
 

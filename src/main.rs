@@ -2,11 +2,13 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use components::MainCamera;
+use item::ItemPlugin;
 use player::PlayerPlugin;
 use save_data::SaveDataPlugin;
 use tile_map::TileMapPlugin;
 
 mod components;
+mod item;
 mod player;
 mod save_data;
 mod tile_map;
@@ -30,6 +32,7 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(TileMapPlugin)
         .add_plugin(SaveDataPlugin)
+        .add_plugin(ItemPlugin)
         .add_startup_system(setup_system)
         .run();
 }
