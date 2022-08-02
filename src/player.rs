@@ -93,8 +93,11 @@ fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextur
         })
         .insert(RigidBody::Dynamic)
         .insert(Collider::capsule_y(8., 9.))
+        .insert(MassProperties {
+            mass: 10.0,
+            ..Default::default()
+        })
         .insert(Velocity::zero())
-        .insert(GravityScale(1.))
         .insert(Player::default())
         .insert(AnimationState::default());
 }

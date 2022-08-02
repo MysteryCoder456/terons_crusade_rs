@@ -1,10 +1,15 @@
 use bevy::{prelude::*, utils::HashMap};
+use bevy_rapier2d::prelude::*;
 use serde::Deserialize;
 // use bevy_rapier2d::prelude::*;
 
-use crate::{components::SpawnItem, SPRITE_SCALE};
+use crate::{
+    components::{Item, SpawnItem},
+    SPRITE_SCALE,
+};
 
 const ITEMS_DIR: &str = "assets/items";
+const ITEM_SPRITE_SCALE: f32 = SPRITE_SCALE * 0.17;
 
 type Items = HashMap<String, ItemData>;
 
@@ -78,15 +83,33 @@ fn item_spawn_system(
 ) {
     for (entity, spawn_item) in query.iter() {
         if let Some(item_data) = items.get(&spawn_item.item_name) {
-            commands.spawn_bundle(SpriteBundle {
-                texture: item_data.sprite.clone(),
-                transform: Transform {
-                    translation: Vec3::new(spawn_item.position.x, spawn_item.position.y, 0.0),
-                    scale: Vec3::new(SPRITE_SCALE, SPRITE_SCALE, SPRITE_SCALE),
+            commands
+                .spawn_bundle(SpriteBundle {
+                    texture: item_data.sprite.clone(),
+                    transform: Transform {
+                        translation: Vec3::new(spawn_item.position.x, spawn_item.position.y, 0.0),
+                        scale: Vec3::new(ITEM_SPRITE_SCALE, ITEM_SPRITE_SCALE, ITEM_SPRITE_SCALE),
+                        ..Default::default()
+                    },
                     ..Default::default()
-                },
-                ..Default::default()
-            });
+                })
+                .insert(RigidBody::Dynamic)
+                .insert(Collider::round_cuboid(
+                    36.0 * ITEM_SPRITE_SCALE - 5.0,
+                    36.0 * ITEM_SPRITE_SCALE - 5.0,
+                    5.0,
+                ))
+                .insert(MassProperties {
+                    mass: 2.0,
+                    ..Default::default()
+                })
+                .insert(Velocity::zero())
+                .insert(Damping {
+                    linear_damping: 0.25,
+                    angular_damping: 0.25,
+                })
+                .insert(Item::default());
+
             commands.entity(entity).despawn();
         } else {
             eprintln!("Tried to spawn undefined item: {}", spawn_item.item_name);

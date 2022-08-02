@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashSet};
 use serde::{Deserialize, Serialize};
 
-use crate::components::SpawnBlock;
+use crate::components::{SpawnBlock, SpawnItem};
 
 const SAVE_DATA_PATH: &str = "world_saves";
 
@@ -18,6 +18,7 @@ impl Plugin for SaveDataPlugin {
 #[derive(Serialize, Deserialize)]
 struct WorldSaveData {
     pub blocks: HashSet<BlockData>,
+    pub items: HashSet<ItemData>,
 }
 
 impl Default for WorldSaveData {
@@ -97,17 +98,31 @@ impl Default for WorldSaveData {
             tile_pos: PositionData { x: 3, y: -1 },
         });
 
+        let mut default_items = HashSet::<ItemData>::new();
+
+        default_items.insert(ItemData {
+            item_name: "pickaxe".to_owned(),
+            position: PositionData { x: 40, y: 80 },
+        });
+
         Self {
             blocks: default_blocks,
+            items: default_items,
         }
     }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
 struct BlockData {
-    pub tile_set: String,
-    pub tile_index: usize,
-    pub tile_pos: PositionData,
+    tile_set: String,
+    tile_index: usize,
+    tile_pos: PositionData,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
+struct ItemData {
+    pub item_name: String,
+    pub position: PositionData,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -148,12 +163,19 @@ fn save_data_setup_system(mut commands: Commands) {
         default_world_data
     };
 
-    // Spawn world
+    // Spawn blocks
     for block_data in world_data.blocks {
         commands.spawn().insert(SpawnBlock {
             tile_set: block_data.tile_set,
             tile_index: block_data.tile_index,
             tile_pos: Vec2::new(block_data.tile_pos.x as f32, block_data.tile_pos.y as f32),
+        });
+    }
+
+    for item_data in world_data.items {
+        commands.spawn().insert(SpawnItem {
+            item_name: item_data.item_name,
+            position: Vec2::new(item_data.position.x as f32, item_data.position.y as f32),
         });
     }
 }
