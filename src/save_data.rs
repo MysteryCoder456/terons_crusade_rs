@@ -172,6 +172,7 @@ fn save_data_setup_system(mut commands: Commands) {
         });
     }
 
+    // Spawn items
     for item_data in world_data.items {
         commands.spawn().insert(SpawnItem {
             item_name: item_data.item_name,
