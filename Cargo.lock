@@ -3007,6 +3007,7 @@ dependencies = [
  "bevy_rapier2d",
  "bincode",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
