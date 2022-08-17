@@ -7,7 +7,7 @@ use crate::{
 };
 
 const JUNGLE_FLOOR_SHEET: &str = "tile_sets/overworld/jungle_floor.png";
-const BLOCK_SIZE: f32 = 16.;
+pub const BLOCK_SIZE: f32 = 16.;
 
 type TileSets = HashMap<String, Handle<TextureAtlas>>;
 
@@ -67,7 +67,10 @@ fn block_spawn_system(
                     },
                     ..Default::default()
                 })
-                .insert(Block)
+                .insert(Block {
+                    tile_set: spawn_data.tile_set.clone(),
+                    tile_index: spawn_data.tile_index,
+                })
                 .insert(RigidBody::Fixed)
                 .insert(Collider::cuboid(BLOCK_SIZE / 2., BLOCK_SIZE / 2.));
         } else {

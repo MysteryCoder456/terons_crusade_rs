@@ -6,7 +6,10 @@ use bevy::prelude::*;
 pub struct MainCamera;
 
 #[derive(Component)]
-pub struct Block;
+pub struct Block {
+    pub tile_set: String,
+    pub tile_index: usize,
+}
 
 #[derive(Component)]
 pub struct Player {
