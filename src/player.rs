@@ -233,6 +233,7 @@ fn player_item_pickup_system(
     }
 }
 
+/// System that handles attraction of entities to the player
 fn player_attractor_system(
     time: Res<Time>,
     player_query: Query<&Transform, With<Player>>,
