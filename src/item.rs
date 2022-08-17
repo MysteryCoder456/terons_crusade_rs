@@ -67,7 +67,7 @@ fn item_setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
                 Some((item_name.to_owned(), data))
             }
             Err(e) => {
-                eprintln!("Error while loading item: {}", e);
+                eprintln!("Error while loading item directory: {}", e);
                 None
             }
         })
@@ -108,7 +108,7 @@ fn item_spawn_system(
                     linear_damping: 0.25,
                     angular_damping: 0.25,
                 })
-                .insert(Item::default());
+                .insert(Item);
 
             commands.entity(entity).despawn();
         } else {
