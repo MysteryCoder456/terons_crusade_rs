@@ -22,7 +22,19 @@ impl Default for Player {
 }
 
 #[derive(Component)]
-pub struct Item;
+pub struct Item {
+    pub item_name: String,
+    pub picked_up: bool,
+}
+
+impl Item {
+    pub fn new(item_name: &str) -> Self {
+        Self {
+            item_name: item_name.to_owned(),
+            picked_up: false,
+        }
+    }
+}
 
 // Entity Types
 
@@ -49,6 +61,11 @@ pub enum AnimationStates {
     Running,
     Jumping,
     Falling,
+}
+
+#[derive(Component)]
+pub struct PlayerAttractor {
+    pub strength: f32,
 }
 
 // Entity Components

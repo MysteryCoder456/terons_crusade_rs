@@ -6,7 +6,7 @@ use bevy::{
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    components::{AnimationState, AnimationStates, MainCamera, Player},
+    components::{AnimationState, AnimationStates, Item, MainCamera, Player, PlayerAttractor},
     SPRITE_SCALE, TIME_STEP,
 };
 
@@ -17,6 +17,7 @@ const JUMP_SHEET: &str = "player/jump.png";
 
 const PLAYER_SPEED: f32 = 170.;
 const PLAYER_JUMP_SPEED: f32 = 530.;
+const PLAYER_REACH: f32 = 120.;
 
 pub struct PlayerPlugin;
 
@@ -29,9 +30,11 @@ impl Plugin for PlayerPlugin {
                 SystemSet::new()
                     .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
                     .with_system(player_camera_follow_system)
-                    .with_system(player_movement_system),
+                    .with_system(player_movement_system)
+                    .with_system(player_attractor_system),
             )
-            .add_system(player_animation_system);
+            .add_system(player_animation_system)
+            .add_system(player_item_pickup_system);
     }
 }
 
@@ -198,6 +201,49 @@ fn player_movement_system(
         // Reset sprite index to 0 to avoid animation issues
         if anim_state.current != anim_state.previous {
             sprite.index = 0;
+        }
+    }
+}
+
+/// System that handles item pickups by the player
+fn player_item_pickup_system(
+    kb: Res<Input<KeyCode>>,
+    player_query: Query<&Transform, (With<Player>, Without<Item>)>,
+    mut item_query: Query<(Entity, &Transform, &mut Item)>,
+    mut commands: Commands,
+) {
+    if kb.just_pressed(KeyCode::E) {
+        if player_query.is_empty() {
+            return;
+        }
+        let player_tf = player_query.get_single().unwrap();
+
+        for (item_entity, item_tf, mut item) in item_query.iter_mut() {
+            if item.picked_up {
+                continue;
+            }
+
+            if player_tf.translation.distance(item_tf.translation) <= PLAYER_REACH {
+                item.picked_up = true;
+                commands
+                    .entity(item_entity)
+                    .insert(PlayerAttractor { strength: 2000. });
+            }
+        }
+    }
+}
+
+fn player_attractor_system(
+    time: Res<Time>,
+    player_query: Query<&Transform, With<Player>>,
+    mut attractor_query: Query<(&Transform, &mut Velocity, &PlayerAttractor)>,
+) {
+    if let Ok(player_tf) = player_query.get_single() {
+        for (attr_tf, mut attr_velocity, attractor) in attractor_query.iter_mut() {
+            let acceleration =
+                (player_tf.translation - attr_tf.translation).normalize() * attractor.strength;
+            attr_velocity.linvel +=
+                Vec2::new(acceleration.x, acceleration.y) * time.delta_seconds();
         }
     }
 }

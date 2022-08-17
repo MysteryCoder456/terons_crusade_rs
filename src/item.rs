@@ -108,7 +108,7 @@ fn item_spawn_system(
                     linear_damping: 0.25,
                     angular_damping: 0.25,
                 })
-                .insert(Item);
+                .insert(Item::new(&spawn_item.item_name));
 
             commands.entity(entity).despawn();
         } else {
