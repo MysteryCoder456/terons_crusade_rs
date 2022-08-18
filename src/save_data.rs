@@ -5,7 +5,7 @@ use crate::{
     components::{Block, Item},
     item::SpawnItemEvent,
     tile_map::{SpawnBlockEvent, BLOCK_SIZE},
-    SPRITE_SCALE,
+    GameState, SPRITE_SCALE,
 };
 
 const SAVE_DATA_PATH: &str = "world_saves";
@@ -14,14 +14,16 @@ pub struct SaveDataPlugin;
 
 impl Plugin for SaveDataPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PreStartup, save_data_setup_system)
-            .add_system(app_exit_save_system)
-            .add_system_set(
-                // Save world data every 5 minutes
-                SystemSet::new()
-                    .with_run_criteria(FixedTimestep::step(300.))
-                    .with_system(periodic_save_system),
-            );
+        app.add_system_set(
+            SystemSet::on_enter(GameState::Game).with_system(save_data_setup_system),
+        )
+        .add_system_set(SystemSet::on_update(GameState::Game).with_system(app_exit_save_system))
+        .add_system_set(
+            // Save world data every 5 minutes
+            SystemSet::on_update(GameState::Game)
+                .with_run_criteria(FixedTimestep::step(300.))
+                .with_system(periodic_save_system),
+        );
     }
 }
 

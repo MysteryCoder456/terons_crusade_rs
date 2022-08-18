@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashMap};
 use bevy_rapier2d::prelude::*;
 
-use crate::{components::Block, SPRITE_SCALE};
+use crate::{components::Block, GameState, SPRITE_SCALE};
 
 const JUNGLE_FLOOR_SHEET: &str = "tile_sets/overworld/jungle_floor.png";
 pub const BLOCK_SIZE: f32 = 16.;
@@ -20,7 +20,7 @@ impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnBlockEvent>()
             .add_startup_system(tile_map_setup_system)
-            .add_system(block_spawn_system);
+            .add_system_set(SystemSet::on_update(GameState::Game).with_system(block_spawn_system));
     }
 }
 

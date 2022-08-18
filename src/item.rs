@@ -3,7 +3,7 @@ use bevy_rapier2d::prelude::*;
 use serde::Deserialize;
 // use bevy_rapier2d::prelude::*;
 
-use crate::{components::Item, SPRITE_SCALE};
+use crate::{components::Item, GameState, SPRITE_SCALE};
 
 const ITEMS_DIR: &str = "assets/items";
 const ITEM_SPRITE_SCALE: f32 = SPRITE_SCALE * 0.17;
@@ -32,8 +32,8 @@ pub struct ItemPlugin;
 impl Plugin for ItemPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnItemEvent>()
-            .add_startup_system_to_stage(StartupStage::PreStartup, item_setup_system)
-            .add_system(item_spawn_system);
+            .add_startup_system(item_setup_system)
+            .add_system_set(SystemSet::on_update(GameState::Game).with_system(item_spawn_system));
     }
 }
 

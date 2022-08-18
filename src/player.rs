@@ -7,7 +7,7 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     components::{AnimationState, AnimationStates, Item, MainCamera, Player, PlayerAttractor},
-    SPRITE_SCALE, TIME_STEP,
+    GameState, SPRITE_SCALE, TIME_STEP,
 };
 
 const IDLE_SHEET: &str = "player/idle.png";
@@ -24,17 +24,20 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(player_setup_system)
-            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_player_system)
+            .add_system_set(SystemSet::on_enter(GameState::Game).with_system(spawn_player_system))
             .add_system_set(
                 // All physics and movement related systems here
-                SystemSet::new()
+                SystemSet::on_update(GameState::Game)
                     .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
                     .with_system(player_camera_follow_system)
                     .with_system(player_movement_system)
                     .with_system(player_attractor_system),
             )
-            .add_system(player_animation_system)
-            .add_system(player_item_pickup_system);
+            .add_system_set(
+                SystemSet::on_update(GameState::Game)
+                    .with_system(player_animation_system)
+                    .with_system(player_item_pickup_system),
+            );
     }
 }
 

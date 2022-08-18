@@ -3,18 +3,31 @@ use bevy_rapier2d::prelude::*;
 
 use components::MainCamera;
 use item::ItemPlugin;
+use main_menu::MainMenuPlugin;
 use player::PlayerPlugin;
 use save_data::SaveDataPlugin;
 use tile_map::TileMapPlugin;
 
 mod components;
 mod item;
+mod main_menu;
 mod player;
 mod save_data;
 mod tile_map;
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 const SPRITE_SCALE: f32 = 2.5;
+const PIXELLARI_FONT: &str = "fonts/Pixellari.ttf";
+
+struct UIAssets {
+    font: Handle<Font>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+enum GameState {
+    MainMenu,
+    Game,
+}
 
 fn main() {
     App::new()
@@ -25,15 +38,18 @@ fn main() {
             height: 720.,
             ..Default::default()
         })
+        .add_state(GameState::MainMenu)
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
             SPRITE_SCALE,
         ))
+        .add_plugin(MainMenuPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(TileMapPlugin)
         .add_plugin(SaveDataPlugin)
         .add_plugin(ItemPlugin)
         .add_startup_system(setup_system)
+        .add_startup_system(ui_assets_setup_system)
         .run();
 }
 
@@ -49,4 +65,10 @@ fn setup_system(mut commands: Commands) {
         ..Default::default()
     };
     commands.insert_resource(rapier_config);
+}
+
+fn ui_assets_setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let font = asset_server.load(PIXELLARI_FONT);
+    let ui_assets = UIAssets { font };
+    commands.insert_resource(ui_assets);
 }
