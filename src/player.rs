@@ -173,8 +173,8 @@ fn player_movement_system(
 
         // Jumping
         if (kb.just_pressed(KeyCode::W) || kb.just_pressed(KeyCode::Space))
-            && -1.5 < velocity.linvel.y
-            && velocity.linvel.y < 1.5
+            && -2. < velocity.linvel.y
+            && velocity.linvel.y < 2.
         {
             velocity.linvel.y += PLAYER_JUMP_SPEED;
         }
@@ -227,7 +227,7 @@ fn player_item_pickup_system(
                 item.picked_up = true;
                 commands
                     .entity(item_entity)
-                    .insert(PlayerAttractor { strength: 2000. });
+                    .insert(PlayerAttractor { strength: 2400. });
             }
         }
     }
