@@ -3,10 +3,7 @@ use bevy_rapier2d::prelude::*;
 use serde::Deserialize;
 // use bevy_rapier2d::prelude::*;
 
-use crate::{
-    components::{Item, SpawnItem},
-    SPRITE_SCALE,
-};
+use crate::{components::Item, SPRITE_SCALE};
 
 const ITEMS_DIR: &str = "assets/items";
 const ITEM_SPRITE_SCALE: f32 = SPRITE_SCALE * 0.17;
@@ -25,11 +22,17 @@ struct ItemData {
     sprite: Handle<Image>,
 }
 
+pub struct SpawnItemEvent {
+    pub item_name: String,
+    pub position: Vec2,
+}
+
 pub struct ItemPlugin;
 
 impl Plugin for ItemPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PreStartup, item_setup_system)
+        app.add_event::<SpawnItemEvent>()
+            .add_startup_system_to_stage(StartupStage::PreStartup, item_setup_system)
             .add_system(item_spawn_system);
     }
 }
@@ -79,9 +82,9 @@ fn item_setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn item_spawn_system(
     mut commands: Commands,
     items: Res<Items>,
-    query: Query<(Entity, &SpawnItem)>,
+    mut events: EventReader<SpawnItemEvent>,
 ) {
-    for (entity, spawn_item) in query.iter() {
+    for spawn_item in events.iter() {
         if let Some(item_data) = items.get(&spawn_item.item_name) {
             commands
                 .spawn_bundle(SpriteBundle {
@@ -109,8 +112,6 @@ fn item_spawn_system(
                     angular_damping: 0.25,
                 })
                 .insert(Item::new(&spawn_item.item_name));
-
-            commands.entity(entity).despawn();
         } else {
             eprintln!("Tried to spawn undefined item: {}", spawn_item.item_name);
         }

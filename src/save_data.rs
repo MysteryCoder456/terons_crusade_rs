@@ -2,8 +2,9 @@ use bevy::{app::AppExit, core::FixedTimestep, prelude::*, utils::HashSet};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    components::{Block, Item, SpawnBlock, SpawnItem},
-    tile_map::BLOCK_SIZE,
+    components::{Block, Item},
+    item::SpawnItemEvent,
+    tile_map::{SpawnBlockEvent, BLOCK_SIZE},
     SPRITE_SCALE,
 };
 
@@ -145,7 +146,10 @@ struct PositionData {
 /// System that loads/generates the game save data.
 /// You'll see a lot of `unwrap` and/or `expect` calls here since
 /// having the game crash at startup is usually not as annoying.
-fn save_data_setup_system(mut commands: Commands) {
+fn save_data_setup_system(
+    mut block_events: EventWriter<SpawnBlockEvent>,
+    mut item_events: EventWriter<SpawnItemEvent>,
+) {
     // Path to directory that holds save files
     let save_data_path = std::path::Path::new(SAVE_DATA_PATH);
 
@@ -175,21 +179,17 @@ fn save_data_setup_system(mut commands: Commands) {
     };
 
     // Spawn blocks
-    for block_data in world_data.blocks {
-        commands.spawn().insert(SpawnBlock {
-            tile_set: block_data.tile_set,
-            tile_index: block_data.tile_index,
-            tile_pos: Vec2::new(block_data.tile_pos.x as f32, block_data.tile_pos.y as f32),
-        });
-    }
+    block_events.send_batch(world_data.blocks.iter().map(|block_data| SpawnBlockEvent {
+        tile_set: block_data.tile_set.clone(),
+        tile_index: block_data.tile_index,
+        tile_pos: Vec2::new(block_data.tile_pos.x as f32, block_data.tile_pos.y as f32),
+    }));
 
     // Spawn items
-    for item_data in world_data.items {
-        commands.spawn().insert(SpawnItem {
-            item_name: item_data.item_name,
-            position: Vec2::new(item_data.position.x as f32, item_data.position.y as f32),
-        });
-    }
+    item_events.send_batch(world_data.items.iter().map(|item_data| SpawnItemEvent {
+        item_name: item_data.item_name.clone(),
+        position: Vec2::new(item_data.position.x as f32, item_data.position.y as f32),
+    }));
 }
 
 /// System that saves the world data every 5 minutes.

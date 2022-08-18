@@ -72,20 +72,3 @@ pub struct PlayerAttractor {
 }
 
 // Entity Components
-
-// Entity Spawner Components
-
-#[derive(Component)]
-pub struct SpawnBlock {
-    pub tile_set: String,
-    pub tile_index: usize,
-    pub tile_pos: Vec2,
-}
-
-#[derive(Component)]
-pub struct SpawnItem {
-    pub item_name: String,
-    pub position: Vec2,
-}
-
-// Entity Spawner Components

@@ -1,21 +1,25 @@
 use bevy::{prelude::*, utils::HashMap};
 use bevy_rapier2d::prelude::*;
 
-use crate::{
-    components::{Block, SpawnBlock},
-    SPRITE_SCALE,
-};
+use crate::{components::Block, SPRITE_SCALE};
 
 const JUNGLE_FLOOR_SHEET: &str = "tile_sets/overworld/jungle_floor.png";
 pub const BLOCK_SIZE: f32 = 16.;
 
 type TileSets = HashMap<String, Handle<TextureAtlas>>;
 
+pub struct SpawnBlockEvent {
+    pub tile_set: String,
+    pub tile_index: usize,
+    pub tile_pos: Vec2,
+}
+
 pub struct TileMapPlugin;
 
 impl Plugin for TileMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(tile_map_setup_system)
+        app.add_event::<SpawnBlockEvent>()
+            .add_startup_system(tile_map_setup_system)
             .add_system(block_spawn_system);
     }
 }
@@ -43,9 +47,9 @@ fn tile_map_setup_system(
 fn block_spawn_system(
     mut commands: Commands,
     tile_sets: Res<TileSets>,
-    query: Query<(Entity, &SpawnBlock)>,
+    mut events: EventReader<SpawnBlockEvent>,
 ) {
-    for (entity, spawn_data) in query.iter() {
+    for spawn_data in events.iter() {
         if let Some(atlas_handle) = tile_sets.get(&spawn_data.tile_set) {
             let translation = Vec3::new(spawn_data.tile_pos.x, spawn_data.tile_pos.y, 0.0)
                 * SPRITE_SCALE
@@ -79,7 +83,5 @@ fn block_spawn_system(
                 spawn_data.tile_set
             );
         }
-
-        commands.entity(entity).despawn();
     }
 }
