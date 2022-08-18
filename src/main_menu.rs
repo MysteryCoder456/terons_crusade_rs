@@ -1,6 +1,9 @@
 use bevy::{prelude::*, ui::FocusPolicy};
 
-use crate::{components::MainMenuButton, GameState, UIAssets};
+use crate::{
+    components::{MainMenu, MainMenuButton},
+    GameState, UIAssets,
+};
 
 pub struct MainMenuPlugin;
 
@@ -10,32 +13,11 @@ impl Plugin for MainMenuPlugin {
             SystemSet::on_enter(GameState::MainMenu).with_system(main_menu_setup_system),
         )
         .add_system_set(
+            SystemSet::on_exit(GameState::MainMenu).with_system(main_menu_unload_system),
+        )
+        .add_system_set(
             SystemSet::on_update(GameState::MainMenu).with_system(main_menu_interaction_system),
         );
-    }
-}
-
-fn main_menu_interaction_system(
-    query: Query<(&MainMenuButton, &Interaction), Changed<Interaction>>,
-) {
-    for (button, interaction) in query.iter() {
-        match interaction {
-            Interaction::Clicked => match button {
-                MainMenuButton::NewGame => {
-                    println!("New Game");
-                }
-                MainMenuButton::LoadGame => {
-                    println!("Load Game");
-                }
-                MainMenuButton::Options => {
-                    println!("Options");
-                }
-                MainMenuButton::Quit => {
-                    println!("Quit");
-                }
-            },
-            Interaction::Hovered | Interaction::None => {}
-        }
     }
 }
 
@@ -56,6 +38,7 @@ fn main_menu_setup_system(mut commands: Commands, ui_assets: Res<UIAssets>) {
             focus_policy: FocusPolicy::Pass,
             ..Default::default()
         })
+        .insert(MainMenu)
         .with_children(|parent| {
             parent.spawn_bundle(TextBundle {
                 text: Text::with_section(
@@ -107,4 +90,36 @@ fn main_menu_setup_system(mut commands: Commands, ui_assets: Res<UIAssets>) {
                     });
                 });
         });
+}
+
+fn main_menu_unload_system(mut commands: Commands, query: Query<Entity, With<MainMenu>>) {
+    if let Ok(entity) = query.get_single() {
+        commands.entity(entity).despawn_recursive();
+        println!("MainMenu unloaded");
+    }
+}
+
+fn main_menu_interaction_system(
+    mut game_state: ResMut<State<GameState>>,
+    query: Query<(&MainMenuButton, &Interaction), Changed<Interaction>>,
+) {
+    for (button, interaction) in query.iter() {
+        match interaction {
+            Interaction::Clicked => match button {
+                MainMenuButton::NewGame => {
+                    println!("New Game");
+                }
+                MainMenuButton::LoadGame => {
+                    game_state.set(GameState::Game).unwrap();
+                }
+                MainMenuButton::Options => {
+                    println!("Options");
+                }
+                MainMenuButton::Quit => {
+                    println!("Quit");
+                }
+            },
+            Interaction::Hovered | Interaction::None => {}
+        }
+    }
 }

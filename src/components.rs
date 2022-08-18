@@ -3,6 +3,9 @@ use bevy::prelude::*;
 // UI Components
 
 #[derive(Component)]
+pub struct MainMenu;
+
+#[derive(Component)]
 pub enum MainMenuButton {
     NewGame,
     LoadGame,
