@@ -1,5 +1,17 @@
 use bevy::prelude::*;
 
+// UI Components
+
+#[derive(Component)]
+pub enum MainMenuButton {
+    NewGame,
+    LoadGame,
+    Options,
+    Quit,
+}
+
+// UI Components
+
 // Entity Types
 
 #[derive(Component)]
