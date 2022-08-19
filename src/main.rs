@@ -24,8 +24,10 @@ struct UIAssets {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-enum GameState {
+pub enum GameState {
     MainMenu,
+    NewGameMenu,
+    OptionsMenu,
     Game,
 }
 

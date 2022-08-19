@@ -1,16 +1,32 @@
 use bevy::prelude::*;
 
+use crate::GameState;
+
 // UI Components
 
 #[derive(Component)]
 pub struct MainMenu;
 
 #[derive(Component)]
+pub struct MainMenuFader {
+    pub fade_timer: Timer,
+    pub next_state: GameState,
+}
+
+impl MainMenuFader {
+    pub fn new(next_state: GameState) -> Self {
+        Self {
+            fade_timer: Timer::from_seconds(2., false),
+            next_state,
+        }
+    }
+}
+
+#[derive(Component)]
 pub enum MainMenuButton {
     NewGame,
     LoadGame,
     Options,
-    Quit,
 }
 
 // UI Components
