@@ -11,15 +11,32 @@ const ITEM_SPRITE_SCALE: f32 = SPRITE_SCALE * 0.17;
 type Items = HashMap<String, ItemData>;
 
 #[derive(Deserialize)]
-struct ItemData {
-    category: String,
-    subcategory: Option<String>,
+pub struct ItemData {
+    item_type: ItemType,
     stack_size: u32,
-    damage: Option<f32>,
-    knockback: Option<f32>,
 
     #[serde(skip)]
     sprite: Handle<Image>,
+}
+
+#[derive(Deserialize)]
+pub enum ItemType {
+    Miscellaneous,
+    Weapon {
+        damage: f32,
+        attack_speed: f32,
+        knockback: f32,
+    },
+    RangedWeapon {
+        projectile_damage: f32,
+        projectile_speed: f32,
+        projectile_knockback: f32,
+        reload_speed: f32,
+    },
+    Block {
+        tile_set: String,
+        tile_index: usize,
+    },
 }
 
 pub struct SpawnItemEvent {

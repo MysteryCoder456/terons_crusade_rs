@@ -1,7 +1,9 @@
 {
-    "category": "tool",
-    "subcategory": "pickaxe",
-    "stack_size": 1,
-    "damage": null,
-    "knockback": null
+    "item_type": {
+        "Block": {
+            "tile_set": "jungle_floor",
+            "tile_index": 0
+        }
+    },
+    "stack_size": 1
 }
