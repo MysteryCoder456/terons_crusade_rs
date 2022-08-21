@@ -284,7 +284,9 @@ fn player_item_collision_system(
                 player_tf.translation,
                 player_sprite_size * player_tf.scale.xy(),
                 item_tf.translation,
-                item_size.0 * item_tf.scale.xy(),
+                // Increasing item's collision size to prevent rapier from
+                // moving it before collision is detected.
+                item_size.0 * item_tf.scale.xy() + Vec2::new(5., 5.),
             );
 
             if col.is_some() {

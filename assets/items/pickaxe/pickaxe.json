@@ -1,8 +1,9 @@
 {
     "item_type": {
-        "Block": {
-            "tile_set": "jungle_floor",
-            "tile_index": 0
+        "Weapon": {
+            "damage": 5.0,
+            "attack_speed": 1.0,
+            "knockback": 2.0
         }
     },
     "stack_size": 1
