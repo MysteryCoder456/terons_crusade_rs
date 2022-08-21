@@ -3,7 +3,10 @@ use bevy_rapier2d::prelude::*;
 use serde::Deserialize;
 // use bevy_rapier2d::prelude::*;
 
-use crate::{components::Item, GameState, SPRITE_SCALE};
+use crate::{
+    components::{Item, SpriteSize},
+    GameState, SPRITE_SCALE,
+};
 
 const ITEMS_DIR: &str = "assets/items";
 const ITEM_SPRITE_SCALE: f32 = SPRITE_SCALE * 0.17;
@@ -11,16 +14,16 @@ const ITEM_SPRITE_SCALE: f32 = SPRITE_SCALE * 0.17;
 pub type Items = HashMap<String, ItemData>;
 
 #[derive(Deserialize)]
-struct ItemData {
-    item_type: ItemType,
-    stack_size: u32,
+pub struct ItemData {
+    pub item_type: ItemType,
+    pub stack_size: usize,
 
     #[serde(skip)]
     sprite: Handle<Image>,
 }
 
 #[derive(Deserialize)]
-enum ItemType {
+pub enum ItemType {
     Miscellaneous,
     Weapon {
         damage: f32,
@@ -108,7 +111,7 @@ fn item_spawn_system(
                     texture: item_data.sprite.clone(),
                     transform: Transform {
                         translation: Vec3::new(spawn_item.position.x, spawn_item.position.y, 0.0),
-                        scale: Vec3::new(ITEM_SPRITE_SCALE, ITEM_SPRITE_SCALE, ITEM_SPRITE_SCALE),
+                        scale: Vec3::new(ITEM_SPRITE_SCALE, ITEM_SPRITE_SCALE, 1.),
                         ..Default::default()
                     },
                     ..Default::default()
@@ -128,7 +131,8 @@ fn item_spawn_system(
                     linear_damping: 0.25,
                     angular_damping: 0.25,
                 })
-                .insert(Item::new(&spawn_item.item_name));
+                .insert(Item::new(&spawn_item.item_name))
+                .insert(SpriteSize(Vec2::new(72., 72.)));
         } else {
             eprintln!("Tried to spawn undefined item: {}", spawn_item.item_name);
         }

@@ -1,12 +1,18 @@
 use bevy::{
     core::{FixedTimestep, Zeroable},
+    math::Vec3Swizzles,
     prelude::*,
     render::render_resource::internal::bytemuck::Contiguous,
+    sprite::collide_aabb,
 };
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    components::{AnimationState, AnimationStates, Item, MainCamera, Player, PlayerAttractor},
+    components::{
+        AnimationState, AnimationStates, Inventory, Item, MainCamera, Player, PlayerAttractor,
+        SpriteSize,
+    },
+    item::Items,
     GameState, SPRITE_SCALE, TIME_STEP,
 };
 
@@ -31,7 +37,8 @@ impl Plugin for PlayerPlugin {
                     .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
                     .with_system(player_camera_follow_system)
                     .with_system(player_movement_system)
-                    .with_system(player_attractor_system),
+                    .with_system(player_attractor_system)
+                    .with_system(player_item_collision_system),
             )
             .add_system_set(
                 SystemSet::on_update(GameState::Game)
@@ -105,7 +112,8 @@ fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextur
         })
         .insert(Velocity::zero())
         .insert(Player::default())
-        .insert(AnimationState::default());
+        .insert(AnimationState::default())
+        .insert(Inventory::default());
 }
 
 /// System that makes the main camera follow the player
@@ -230,7 +238,54 @@ fn player_item_pickup_system(
                 item.picked_up = true;
                 commands
                     .entity(item_entity)
-                    .insert(PlayerAttractor { strength: 2400. });
+                    .insert(PlayerAttractor { strength: 2600. });
+            }
+        }
+    }
+}
+
+fn player_item_collision_system(
+    mut commands: Commands,
+    texture_atlases: Res<Assets<TextureAtlas>>,
+    items: Res<Items>,
+    mut player_query: Query<(&Transform, &Handle<TextureAtlas>, &mut Inventory), With<Player>>,
+    item_query: Query<(Entity, &Transform, &SpriteSize, &Item)>,
+) {
+    if let Ok((player_tf, player_atlas_handle, mut player_inv)) = player_query.get_single_mut() {
+        let player_atlas_first = texture_atlases
+            .get(player_atlas_handle)
+            .unwrap()
+            .textures
+            .first()
+            .unwrap();
+        let player_sprite_size = player_atlas_first.max - player_atlas_first.min;
+
+        for (item_entity, item_tf, item_size, item) in item_query.iter() {
+            if !item.picked_up {
+                continue;
+            }
+
+            let col = collide_aabb::collide(
+                player_tf.translation,
+                player_sprite_size * player_tf.scale.xy(),
+                item_tf.translation,
+                item_size.0 * item_tf.scale.xy(),
+            );
+
+            if col.is_some() {
+                if let Some(item_data) = items.get(&item.item_name) {
+                    let inv = &mut player_inv.0;
+
+                    if let Some(current_count) = inv.get_mut(&item.item_name) {
+                        if *current_count < item_data.stack_size {
+                            *current_count += 1;
+                        }
+                    } else {
+                        inv.insert(item.item_name.clone(), 1);
+                    }
+                }
+
+                commands.entity(item_entity).despawn();
             }
         }
     }

@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 
 use crate::GameState;
 
@@ -101,5 +101,12 @@ pub enum AnimationStates {
 pub struct PlayerAttractor {
     pub strength: f32,
 }
+
+/// Contains HashMap with key as item name and value as item quantity.
+#[derive(Component, Default)]
+pub struct Inventory(pub HashMap<String, usize>);
+
+#[derive(Component)]
+pub struct SpriteSize(pub Vec2);
 
 // Entity Components
