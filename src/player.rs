@@ -101,11 +101,11 @@ fn spawn_player_system(
     player_textures: Res<PlayerTextures>,
     player_query: Query<(), With<Player>>,
 ) {
-    for spawn_player in events.iter() {
-        if !player_query.is_empty() {
-            return;
-        }
+    if !player_query.is_empty() {
+        return;
+    }
 
+    for spawn_player in events.iter() {
         commands
             .spawn_bundle(SpriteSheetBundle {
                 texture_atlas: player_textures.idle.clone(),
