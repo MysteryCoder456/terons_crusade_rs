@@ -8,10 +8,10 @@ use crate::{components::Item, GameState, SPRITE_SCALE};
 const ITEMS_DIR: &str = "assets/items";
 const ITEM_SPRITE_SCALE: f32 = SPRITE_SCALE * 0.17;
 
-type Items = HashMap<String, ItemData>;
+pub type Items = HashMap<String, ItemData>;
 
 #[derive(Deserialize)]
-pub struct ItemData {
+struct ItemData {
     item_type: ItemType,
     stack_size: u32,
 
@@ -20,7 +20,7 @@ pub struct ItemData {
 }
 
 #[derive(Deserialize)]
-pub enum ItemType {
+enum ItemType {
     Miscellaneous,
     Weapon {
         damage: f32,
