@@ -25,12 +25,23 @@ const PLAYER_SPEED: f32 = 170.;
 const PLAYER_JUMP_SPEED: f32 = 530.;
 const PLAYER_REACH: f32 = 120.;
 
+struct PlayerTextures {
+    pub idle: Handle<TextureAtlas>,
+    pub run: Handle<TextureAtlas>,
+    pub fall: Handle<TextureAtlas>,
+    pub jump: Handle<TextureAtlas>,
+}
+
+pub struct SpawnPlayerEvent {
+    pub position: Vec3,
+}
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(player_setup_system)
-            .add_system_set(SystemSet::on_enter(GameState::Game).with_system(spawn_player_system))
+        app.add_event::<SpawnPlayerEvent>()
+            .add_startup_system(player_setup_system)
             .add_system_set(
                 // All physics and movement related systems here
                 SystemSet::on_update(GameState::Game)
@@ -42,17 +53,11 @@ impl Plugin for PlayerPlugin {
             )
             .add_system_set(
                 SystemSet::on_update(GameState::Game)
+                    .with_system(spawn_player_system)
                     .with_system(player_animation_system)
                     .with_system(player_item_pickup_system),
             );
     }
-}
-
-struct PlayerTextures {
-    pub idle: Handle<TextureAtlas>,
-    pub run: Handle<TextureAtlas>,
-    pub fall: Handle<TextureAtlas>,
-    pub jump: Handle<TextureAtlas>,
 }
 
 fn player_setup_system(
@@ -90,30 +95,40 @@ fn player_setup_system(
     commands.insert_resource(player_textures);
 }
 
-fn spawn_player_system(mut commands: Commands, player_textures: Res<PlayerTextures>) {
-    // TODO: Load this from world save
-    let spawn_pos = Vec3::new(0., 300., 0.);
+fn spawn_player_system(
+    mut commands: Commands,
+    mut events: EventReader<SpawnPlayerEvent>,
+    player_textures: Res<PlayerTextures>,
+    player_query: Query<(), With<Player>>,
+) {
+    for spawn_player in events.iter() {
+        if !player_query.is_empty() {
+            return;
+        }
 
-    commands
-        .spawn_bundle(SpriteSheetBundle {
-            texture_atlas: player_textures.idle.clone(),
-            transform: Transform {
-                translation: spawn_pos,
-                scale: Vec3::new(SPRITE_SCALE, SPRITE_SCALE, 1.),
+        commands
+            .spawn_bundle(SpriteSheetBundle {
+                texture_atlas: player_textures.idle.clone(),
+                transform: Transform {
+                    translation: spawn_player.position,
+                    scale: Vec3::new(SPRITE_SCALE, SPRITE_SCALE, 1.),
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::capsule_y(8., 9.))
-        .insert(MassProperties {
-            mass: 10.0,
-            ..Default::default()
-        })
-        .insert(Velocity::zero())
-        .insert(Player::default())
-        .insert(AnimationState::default())
-        .insert(Inventory::default());
+            })
+            .insert(RigidBody::Dynamic)
+            .insert(Collider::capsule_y(8., 9.))
+            .insert(MassProperties {
+                mass: 10.0,
+                ..Default::default()
+            })
+            .insert(Velocity::zero())
+            .insert(Player::default())
+            .insert(AnimationState::default())
+            .insert(Inventory::default());
+
+        break;
+    }
 }
 
 /// System that makes the main camera follow the player

@@ -2,8 +2,9 @@ use bevy::{app::AppExit, core::FixedTimestep, prelude::*, utils::HashSet};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    components::{Block, Item},
+    components::{Block, Item, Player},
     item::SpawnItemEvent,
+    player::SpawnPlayerEvent,
     tile_map::{SpawnBlockEvent, BLOCK_SIZE},
     GameState, SPRITE_SCALE,
 };
@@ -31,6 +32,7 @@ impl Plugin for SaveDataPlugin {
 
 #[derive(Serialize, Deserialize)]
 struct WorldSaveData {
+    pub player_spawn: PositionData,
     pub blocks: HashSet<BlockData>,
     pub items: HashSet<ItemData>,
 }
@@ -120,6 +122,7 @@ impl Default for WorldSaveData {
         });
 
         Self {
+            player_spawn: PositionData { x: 0, y: 300 },
             blocks: default_blocks,
             items: default_items,
         }
@@ -151,6 +154,7 @@ struct PositionData {
 fn save_data_setup_system(
     mut block_events: EventWriter<SpawnBlockEvent>,
     mut item_events: EventWriter<SpawnItemEvent>,
+    mut player_events: EventWriter<SpawnPlayerEvent>,
 ) {
     // Path to directory that holds save files
     let save_data_path = std::path::Path::new(SAVE_DATA_PATH);
@@ -192,14 +196,24 @@ fn save_data_setup_system(
         item_name: item_data.item_name.clone(),
         position: Vec2::new(item_data.position.x as f32, item_data.position.y as f32),
     }));
+
+    // Spawn player
+    player_events.send(SpawnPlayerEvent {
+        position: Vec3::new(
+            world_data.player_spawn.x as f32,
+            world_data.player_spawn.y as f32,
+            0.0,
+        ),
+    });
 }
 
 /// System that saves the world data every 5 minutes.
 fn periodic_save_system(
     block_query: Query<(&Transform, &Block)>,
     item_query: Query<(&Transform, &Item)>,
+    player_query: Query<&Transform, With<Player>>,
 ) {
-    save_world_data(block_query, item_query);
+    save_world_data(block_query, item_query, player_query);
 }
 
 /// System that save the world data when the game is closed.
@@ -207,9 +221,10 @@ fn app_exit_save_system(
     app_exit_events: EventReader<AppExit>,
     block_query: Query<(&Transform, &Block)>,
     item_query: Query<(&Transform, &Item)>,
+    player_query: Query<&Transform, With<Player>>,
 ) {
     if !app_exit_events.is_empty() {
-        save_world_data(block_query, item_query);
+        save_world_data(block_query, item_query, player_query);
     }
 }
 
@@ -220,6 +235,7 @@ fn app_exit_save_system(
 fn save_world_data(
     block_query: Query<(&Transform, &Block)>,
     item_query: Query<(&Transform, &Item)>,
+    player_query: Query<&Transform, With<Player>>,
 ) {
     let blocks: HashSet<BlockData> = block_query
         .iter()
@@ -244,7 +260,17 @@ fn save_world_data(
         })
         .collect();
 
-    let world_data = WorldSaveData { blocks, items };
+    let player_position = player_query.single().translation;
+    let player_spawn = PositionData {
+        x: player_position.x as i32,
+        y: player_position.y as i32,
+    };
+
+    let world_data = WorldSaveData {
+        player_spawn,
+        blocks,
+        items,
+    };
 
     match bincode::serialize(&world_data) {
         Ok(world_data_serialized) => {
