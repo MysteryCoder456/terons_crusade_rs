@@ -102,7 +102,6 @@ pub struct PlayerAttractor {
     pub strength: f32,
 }
 
-/// Contains HashMap with key as item name and value as item quantity.
 #[derive(Component, Default)]
 pub struct Inventory {
     pub slots: Vec<(String, usize)>,
