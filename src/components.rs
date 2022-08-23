@@ -104,7 +104,10 @@ pub struct PlayerAttractor {
 
 /// Contains HashMap with key as item name and value as item quantity.
 #[derive(Component, Default)]
-pub struct Inventory(pub HashMap<String, usize>);
+pub struct Inventory {
+    pub slots: Vec<(String, usize)>,
+    pub max_slots: usize,
+}
 
 #[derive(Component)]
 pub struct SpriteSize(pub Vec2);

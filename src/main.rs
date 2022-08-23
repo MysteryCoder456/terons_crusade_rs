@@ -9,6 +9,7 @@ use save_data::SaveDataPlugin;
 use tile_map::TileMapPlugin;
 
 mod components;
+mod inventory;
 mod item;
 mod main_menu;
 mod player;
@@ -29,6 +30,7 @@ pub enum GameState {
     NewGameMenu,
     OptionsMenu,
     Game,
+    Inventory,
 }
 
 fn main() {

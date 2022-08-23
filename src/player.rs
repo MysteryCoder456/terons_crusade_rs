@@ -125,7 +125,10 @@ fn spawn_player_system(
             .insert(Velocity::zero())
             .insert(Player::default())
             .insert(AnimationState::default())
-            .insert(Inventory::default());
+            .insert(Inventory {
+                slots: Vec::default(),
+                max_slots: 9,
+            });
 
         break;
     }
@@ -234,26 +237,27 @@ fn player_movement_system(
 /// System that handles item pickups by the player
 fn player_item_pickup_system(
     kb: Res<Input<KeyCode>>,
-    player_query: Query<&Transform, (With<Player>, Without<Item>)>,
+    player_query: Query<(&Transform, &Inventory), (With<Player>, Without<Item>)>,
     mut item_query: Query<(Entity, &Transform, &mut Item)>,
     mut commands: Commands,
 ) {
     if kb.just_pressed(KeyCode::E) {
-        if player_query.is_empty() {
-            return;
-        }
-        let player_tf = player_query.get_single().unwrap();
-
-        for (item_entity, item_tf, mut item) in item_query.iter_mut() {
-            if item.picked_up {
-                continue;
+        if let Ok((player_tf, player_inv)) = player_query.get_single() {
+            if player_inv.slots.len() >= player_inv.max_slots {
+                return;
             }
 
-            if player_tf.translation.distance(item_tf.translation) <= PLAYER_REACH {
-                item.picked_up = true;
-                commands
-                    .entity(item_entity)
-                    .insert(PlayerAttractor { strength: 2600. });
+            for (item_entity, item_tf, mut item) in item_query.iter_mut() {
+                if item.picked_up {
+                    continue;
+                }
+
+                if player_tf.translation.distance(item_tf.translation) <= PLAYER_REACH {
+                    item.picked_up = true;
+                    commands
+                        .entity(item_entity)
+                        .insert(PlayerAttractor { strength: 2600. });
+                }
             }
         }
     }
@@ -264,7 +268,7 @@ fn player_item_collision_system(
     texture_atlases: Res<Assets<TextureAtlas>>,
     items: Res<Items>,
     mut player_query: Query<(&Transform, &Handle<TextureAtlas>, &mut Inventory), With<Player>>,
-    item_query: Query<(Entity, &Transform, &SpriteSize, &Item)>,
+    mut item_query: Query<(Entity, &Transform, &SpriteSize, &mut Item)>,
 ) {
     if let Ok((player_tf, player_atlas_handle, mut player_inv)) = player_query.get_single_mut() {
         let player_atlas_first = texture_atlases
@@ -275,7 +279,13 @@ fn player_item_collision_system(
             .unwrap();
         let player_sprite_size = player_atlas_first.max - player_atlas_first.min;
 
-        for (item_entity, item_tf, item_size, item) in item_query.iter() {
+        for (item_entity, item_tf, item_size, mut item) in item_query.iter_mut() {
+            // Remove PlayerAttractor and "unpick" item if inventory is full now
+            if player_inv.slots.len() >= player_inv.max_slots {
+                commands.entity(item_entity).remove::<PlayerAttractor>();
+                item.picked_up = false;
+            }
+
             if !item.picked_up {
                 continue;
             }
@@ -291,14 +301,18 @@ fn player_item_collision_system(
 
             if col.is_some() {
                 if let Some(item_data) = items.get(&item.item_name) {
-                    let inv = &mut player_inv.0;
+                    let inv: &mut Vec<(String, usize)> = &mut player_inv.slots;
 
-                    if let Some(current_count) = inv.get_mut(&item.item_name) {
-                        if *current_count < item_data.stack_size {
-                            *current_count += 1;
-                        }
+                    // Find a slot which has the same item and has space for more items
+                    let existing_slot_pos = inv.iter().position(|(item_name, item_count)| {
+                        *item_name == item.item_name && *item_count < item_data.stack_size
+                    });
+
+                    if let Some(slot_idx) = existing_slot_pos {
+                        let existing_slot = inv.get_mut(slot_idx).unwrap();
+                        existing_slot.1 += 1;
                     } else {
-                        inv.insert(item.item_name.clone(), 1);
+                        inv.push((item.item_name.clone(), 1));
                     }
                 }
 
