@@ -77,10 +77,22 @@ fn main_menu_setup_system(mut commands: Commands, ui_assets: Res<UIAssets>) {
                         ..Default::default()
                     },
                     color: UiColor(Color::NONE),
+
                     ..Default::default()
                 })
                 .insert(MainMenuButton::LoadGame)
                 .with_children(|button| {
+                    button.spawn_bundle(ImageBundle {
+                        image: UiImage(ui_assets.button.clone()),
+                        style: Style {
+                            position_type: PositionType::Absolute,
+                            size: Size::new(Val::Percent(100.), Val::Percent(100.)),
+                            ..Default::default()
+                        },
+                        focus_policy: FocusPolicy::Pass,
+                        ..Default::default()
+                    });
+
                     button.spawn_bundle(TextBundle {
                         text: Text::with_section(
                             "Play",
@@ -111,13 +123,20 @@ fn main_menu_unload_system(mut commands: Commands, query: Query<Entity, With<Mai
 // System that handles button interactions in the main menu.
 fn main_menu_interaction_system(
     mut commands: Commands,
-    interaction_query: Query<(&MainMenuButton, &Interaction), Changed<Interaction>>,
+    ui_assets: Res<UIAssets>,
+    interaction_query: Query<(&Children, &MainMenuButton, &Interaction), Changed<Interaction>>,
     main_menu_query: Query<Entity, With<MainMenu>>,
+    mut image_query: Query<&mut UiImage>,
 ) {
     if let Ok(main_menu_entity) = main_menu_query.get_single() {
-        for (button, interaction) in interaction_query.iter() {
+        for (children, button, interaction) in interaction_query.iter() {
+            let image_child = children.iter().next().unwrap();
+            let mut button_image = image_query.get_mut(*image_child).unwrap();
+
             match interaction {
                 Interaction::Clicked => {
+                    button_image.0 = ui_assets.button_pressed.clone();
+
                     let next_state = match button {
                         MainMenuButton::NewGame => GameState::NewGameMenu,
                         MainMenuButton::LoadGame => GameState::Game,
@@ -140,7 +159,9 @@ fn main_menu_interaction_system(
                             .insert(MainMenuFader::new(next_state));
                     });
                 }
-                Interaction::Hovered | Interaction::None => {}
+                Interaction::Hovered | Interaction::None => {
+                    button_image.0 = ui_assets.button.clone();
+                }
             }
         }
     }

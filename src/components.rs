@@ -16,7 +16,7 @@ pub struct MainMenuFader {
 impl MainMenuFader {
     pub fn new(next_state: GameState) -> Self {
         Self {
-            fade_timer: Timer::from_seconds(2., false),
+            fade_timer: Timer::from_seconds(1.25, false),
             next_state,
         }
     }
