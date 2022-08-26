@@ -20,13 +20,19 @@ const TIME_STEP: f32 = 1.0 / 60.0;
 const SPRITE_SCALE: f32 = 2.5;
 
 const PIXELLARI_FONT: &str = "fonts/Pixellari.ttf";
-const BUTTON_SPRITE: &str = "ui/button.png";
-const BUTTON_PRESSED_SPRITE: &str = "ui/button_pressed.png";
+const BUTTON_SPRITE: &str = "ui/button/button.png";
+const BUTTON_PRESSED_SPRITE: &str = "ui/button/button_pressed.png";
+const INVENTORY_SLOT_SPRITE: &str = "ui/inventory/inventory_slot.png";
+const INVENTORY_SLOT_SELECTED_SPRITE: &str = "ui/inventory/inventory_slot_selected.png";
+const INVENTORY_BG_SPRITE: &str = "ui/inventory/inventory_bg.png";
 
 struct UIAssets {
     font: Handle<Font>,
     button: Handle<Image>,
     button_pressed: Handle<Image>,
+    inventory_slot: Handle<Image>,
+    inventory_slot_selected: Handle<Image>,
+    inventory_bg: Handle<Image>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -77,14 +83,13 @@ fn setup_system(mut commands: Commands) {
 }
 
 fn ui_assets_setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load(PIXELLARI_FONT);
-    let button = asset_server.load(BUTTON_SPRITE);
-    let button_pressed = asset_server.load(BUTTON_PRESSED_SPRITE);
-
     let ui_assets = UIAssets {
-        font,
-        button,
-        button_pressed,
+        font: asset_server.load(PIXELLARI_FONT),
+        button: asset_server.load(BUTTON_SPRITE),
+        button_pressed: asset_server.load(BUTTON_PRESSED_SPRITE),
+        inventory_slot: asset_server.load(INVENTORY_SLOT_SPRITE),
+        inventory_slot_selected: asset_server.load(INVENTORY_SLOT_SELECTED_SPRITE),
+        inventory_bg: asset_server.load(INVENTORY_BG_SPRITE),
     };
     commands.insert_resource(ui_assets);
 }
