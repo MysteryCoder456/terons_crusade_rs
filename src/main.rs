@@ -73,6 +73,7 @@ fn setup_system(mut commands: Commands) {
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(MainCamera);
+    commands.spawn_bundle(UiCameraBundle::default());
 
     // Add Rapier configurations
     let rapier_config = RapierConfiguration {

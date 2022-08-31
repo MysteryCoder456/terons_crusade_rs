@@ -25,8 +25,6 @@ impl Plugin for MainMenuPlugin {
 
 // System that spawns the main menu UI.
 fn main_menu_setup_system(mut commands: Commands, ui_assets: Res<UIAssets>) {
-    commands.spawn_bundle(UiCameraBundle::default());
-
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
