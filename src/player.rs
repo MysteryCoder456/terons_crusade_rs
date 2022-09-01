@@ -241,7 +241,7 @@ fn player_item_pickup_system(
     mut item_query: Query<(Entity, &Transform, &mut Item)>,
     mut commands: Commands,
 ) {
-    if kb.just_pressed(KeyCode::E) {
+    if kb.just_pressed(KeyCode::F) {
         if let Ok((player_tf, player_inv)) = player_query.get_single() {
             if player_inv.slots.len() >= player_inv.max_slots {
                 return;
