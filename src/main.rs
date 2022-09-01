@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use components::MainCamera;
+use inventory_menu::InventoryMenuPlugin;
 use item::ItemPlugin;
 use main_menu::MainMenuPlugin;
 use player::PlayerPlugin;
@@ -9,7 +10,7 @@ use save_data::SaveDataPlugin;
 use tile_map::TileMapPlugin;
 
 mod components;
-mod inventory;
+mod inventory_menu;
 mod item;
 mod main_menu;
 mod player;
@@ -59,6 +60,7 @@ fn main() {
             SPRITE_SCALE,
         ))
         .add_plugin(MainMenuPlugin)
+        .add_plugin(InventoryMenuPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(TileMapPlugin)
         .add_plugin(SaveDataPlugin)

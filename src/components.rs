@@ -29,6 +29,9 @@ pub enum MainMenuButton {
     Options,
 }
 
+#[derive(Component)]
+pub struct InventoryMenu;
+
 // UI Components
 
 // Entity Types
