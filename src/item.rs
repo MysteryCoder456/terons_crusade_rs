@@ -19,7 +19,7 @@ pub struct ItemData {
     pub stack_size: usize,
 
     #[serde(skip)]
-    sprite: Handle<Image>,
+    pub sprite: Handle<Image>,
 }
 
 #[derive(Deserialize)]
