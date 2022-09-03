@@ -6,7 +6,7 @@ use bevy::{
 use crate::{
     components::{Inventory, InventoryMenu, Player},
     item::Items,
-    player, GameState, UIAssets,
+    GameState, UIAssets,
 };
 
 pub struct InventoryMenuPlugin;
