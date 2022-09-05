@@ -4,7 +4,7 @@ use bevy::{
 };
 
 use crate::{
-    components::{Inventory, InventoryMenu, Player},
+    components::{Inventory, InventoryMenu, InventorySlot, InventorySlotBG, Player},
     item::Items,
     GameState, UIAssets,
 };
@@ -48,7 +48,6 @@ fn inventory_menu_setup_system(
             focus_policy: FocusPolicy::Pass,
             ..Default::default()
         })
-        .insert(InventoryMenu)
         .with_children(|parent| {
             parent
                 .spawn_bundle(ImageBundle {
@@ -66,21 +65,37 @@ fn inventory_menu_setup_system(
                     image_mode: ImageMode::KeepAspect,
                     ..Default::default()
                 })
+                .insert(InventoryMenu)
                 .with_children(|inventory| {
                     for (item_name, item_count) in &player_inv.slots {
                         if let Some(item_data) = items.get(item_name) {
                             inventory
-                                .spawn_bundle(ImageBundle {
+                                .spawn_bundle(ButtonBundle {
                                     style: Style {
                                         align_items: AlignItems::Center,
                                         justify_content: JustifyContent::Center,
                                         size: Size::new(Val::Px(60.), Val::Px(60.)),
                                         ..Default::default()
                                     },
-                                    image: UiImage(ui_assets.inventory_slot.clone()),
                                     ..Default::default()
                                 })
+                                .insert(InventorySlot {
+                                    item_name: item_name.clone(),
+                                    item_count: *item_count,
+                                })
                                 .with_children(|slot| {
+                                    // Slot Background
+                                    slot.spawn_bundle(ImageBundle {
+                                        style: Style {
+                                            position_type: PositionType::Absolute,
+                                            size: Size::new(Val::Percent(100.), Val::Percent(100.)),
+                                            ..Default::default()
+                                        },
+                                        image: UiImage(ui_assets.inventory_slot.clone()),
+                                        ..Default::default()
+                                    })
+                                    .insert(InventorySlotBG);
+
                                     // Item Icon
                                     slot.spawn_bundle(ImageBundle {
                                         style: Style {

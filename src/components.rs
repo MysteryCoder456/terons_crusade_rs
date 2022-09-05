@@ -32,6 +32,15 @@ pub enum MainMenuButton {
 #[derive(Component)]
 pub struct InventoryMenu;
 
+#[derive(Component)]
+pub struct InventorySlot {
+    pub item_name: String,
+    pub item_count: usize,
+}
+
+#[derive(Component)]
+pub struct InventorySlotBG;
+
 // UI Components
 
 // Entity Types
