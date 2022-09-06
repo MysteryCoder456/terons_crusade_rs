@@ -30,6 +30,9 @@ pub enum MainMenuButton {
 }
 
 #[derive(Component)]
+pub struct InventoryMenuParent;
+
+#[derive(Component)]
 pub struct InventoryMenu;
 
 #[derive(Component)]

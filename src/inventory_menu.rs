@@ -4,7 +4,9 @@ use bevy::{
 };
 
 use crate::{
-    components::{Inventory, InventoryMenu, InventorySlot, InventorySlotBG, Player},
+    components::{
+        Inventory, InventoryMenu, InventoryMenuParent, InventorySlot, InventorySlotBG, Player,
+    },
     item::Items,
     GameState, UIAssets,
 };
@@ -17,12 +19,17 @@ impl Plugin for InventoryMenuPlugin {
             SystemSet::on_enter(GameState::Inventory).with_system(inventory_menu_setup_system),
         )
         .add_system_set(
+            SystemSet::on_update(GameState::Inventory)
+                .with_system(inventory_slot_interaction_system),
+        )
+        .add_system_set(
             SystemSet::on_exit(GameState::Inventory).with_system(inventory_menu_unload_system),
         )
         .add_system(inventory_menu_toggle_system);
     }
 }
 
+/// System that loads the inventory menu with all the items in the player's inventory.
 fn inventory_menu_setup_system(
     mut commands: Commands,
     ui_assets: Res<UIAssets>,
@@ -45,9 +52,9 @@ fn inventory_menu_setup_system(
                 ..Default::default()
             },
             color: UiColor(Color::rgba(0., 0., 0., 0.4)),
-            focus_policy: FocusPolicy::Pass,
             ..Default::default()
         })
+        .insert(InventoryMenuParent)
         .with_children(|parent| {
             parent
                 .spawn_bundle(ImageBundle {
@@ -60,7 +67,6 @@ fn inventory_menu_setup_system(
                         padding: Rect::all(Val::Percent(3.)),
                         ..Default::default()
                     },
-                    focus_policy: FocusPolicy::Pass,
                     image: UiImage(ui_assets.inventory_bg.clone()),
                     image_mode: ImageMode::KeepAspect,
                     ..Default::default()
@@ -91,6 +97,7 @@ fn inventory_menu_setup_system(
                                             size: Size::new(Val::Percent(100.), Val::Percent(100.)),
                                             ..Default::default()
                                         },
+                                        focus_policy: FocusPolicy::Pass,
                                         image: UiImage(ui_assets.inventory_slot.clone()),
                                         ..Default::default()
                                     })
@@ -103,6 +110,7 @@ fn inventory_menu_setup_system(
                                             size: Size::new(Val::Percent(75.), Val::Percent(75.)),
                                             ..Default::default()
                                         },
+                                        focus_policy: FocusPolicy::Pass,
                                         image: UiImage(item_data.sprite.clone()),
                                         ..Default::default()
                                     });
@@ -122,6 +130,7 @@ fn inventory_menu_setup_system(
                                                     vertical: VerticalAlign::Center,
                                                 },
                                             ),
+                                            focus_policy: FocusPolicy::Pass,
                                             style: Style {
                                                 position: Rect {
                                                     bottom: Val::Percent(5.),
@@ -145,12 +154,17 @@ fn inventory_menu_setup_system(
         });
 }
 
-fn inventory_menu_unload_system(mut commands: Commands, query: Query<Entity, With<InventoryMenu>>) {
+/// System that despawns the inventory menu.
+fn inventory_menu_unload_system(
+    mut commands: Commands,
+    query: Query<Entity, With<InventoryMenuParent>>,
+) {
     if let Ok(entity) = query.get_single() {
         commands.entity(entity).despawn_recursive();
     }
 }
 
+/// System that toggles the Inventory game state when user presses E on the keyboard.
 fn inventory_menu_toggle_system(kb: Res<Input<KeyCode>>, mut game_state: ResMut<State<GameState>>) {
     if kb.just_pressed(KeyCode::E) {
         match *game_state.current() {
@@ -165,6 +179,33 @@ fn inventory_menu_toggle_system(kb: Res<Input<KeyCode>>, mut game_state: ResMut<
                 }
             }
             _ => {}
+        }
+    }
+}
+
+/// System that handles interaction of inventory slot buttons
+fn inventory_slot_interaction_system(
+    mut commands: Commands,
+    ui_assets: Res<UIAssets>,
+    slot_query: Query<(&Children, &InventorySlot, &Interaction), Changed<Interaction>>,
+    mut image_query: Query<&mut UiImage, With<InventorySlotBG>>,
+) {
+    for (slot_children, slot, interaction) in slot_query.iter() {
+        let slot_bg_entity = slot_children.iter().next().unwrap();
+        let mut slot_bg = image_query.get_mut(*slot_bg_entity).unwrap();
+
+        match interaction {
+            Interaction::Clicked => {
+                println!("Clicked");
+            }
+            Interaction::Hovered => {
+                println!("Hovered");
+                slot_bg.0 = ui_assets.inventory_slot_selected.clone();
+            }
+            Interaction::None => {
+                println!("Nothing");
+                slot_bg.0 = ui_assets.inventory_slot.clone();
+            }
         }
     }
 }
