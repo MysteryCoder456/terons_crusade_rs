@@ -183,7 +183,7 @@ fn inventory_menu_toggle_system(kb: Res<Input<KeyCode>>, mut game_state: ResMut<
     }
 }
 
-/// System that handles interaction of inventory slot buttons
+/// System that handles interaction with inventory slot buttons.
 fn inventory_slot_interaction_system(
     mut commands: Commands,
     ui_assets: Res<UIAssets>,
